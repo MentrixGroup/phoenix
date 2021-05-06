@@ -21,6 +21,7 @@ stages:
     - curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
     - unzip awscliv2.zip
     - aws/install
+    - ls -la
     - docker build -t $DOCKER_REGISTRY/$APP_NAME:latest . 
     - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
     - docker push $DOCKER_REGISTRY/$APP_NAME:latest
