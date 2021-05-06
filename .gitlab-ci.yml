@@ -15,10 +15,19 @@ stages:
     - wmfbooks-docker-runner
 
 .run_build: &run_build
-  stage: build_api
-  image: golang:alpine
+  image: 
+    name: amazon/aws-cli
+    entrypoint: [""]
+  services:
+    - docker:dind
+  before_script:
+    - amazon-linux-extras install docker
+    - aws --version
+    - docker --version
   script:
-    - echo "test"
+    - docker build -t $DOCKER_REGISTRY/$APP_NAME:latest . 
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - docker push $DOCKER_REGISTRY/$APP_NAME:latest
   tags:
     - wmfbooks-docker-runner
 
