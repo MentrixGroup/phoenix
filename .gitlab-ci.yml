@@ -15,6 +15,7 @@ stages:
     - wmfbooks-docker-runner
 
 .run_build: &run_build
+  stage: deploy_be
   image: 
     name: amazon/aws-cli
     entrypoint: [""]
