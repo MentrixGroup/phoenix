@@ -13,7 +13,7 @@ stages:
   tags:
     - wmfbooks-docker-runner
 
-.run_deploy: &run_deploy
+.run_build: &run_build
   stage: build_api
   image: golang:alpine
   script:
