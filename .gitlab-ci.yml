@@ -37,6 +37,8 @@ stages:
     API_URL: ${API_URL}
 
 .be_env: &be_env
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
   only:
     - master
   environment:
