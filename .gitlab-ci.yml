@@ -17,7 +17,7 @@ stages:
 .run_build: &run_build
   stage: build_api
   script:
-    - apt install curl
+    - apk add curl
     - curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
     - unzip awscliv2.zip
     - aws/install
