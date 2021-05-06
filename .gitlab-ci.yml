@@ -17,12 +17,17 @@ stages:
 .run_build: &run_build
   stage: build_api
   script:
-    - apk add curl
-    - curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
-    - unzip awscliv2.zip
-    - docker build -t $DOCKER_REGISTRY/$APP_NAME:latest . 
-    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - apk add --update --no-cache build-base python3-dev python3 libffi-dev libressl-dev bash git gettext curl  
+    - curl -O https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && pip install --upgrade six awscli 
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REPO
+    - docker build -f Dockerfile -t $APP_NAME .
+    - docker tag $APP_NAME:$DOCKER_REGISTRY/$APP_NAME:latest
+    - docker tag $APP_NAME:$DOCKER_REGISTRY/$APP_NAME:$CI_COMMIT_TAG
     - docker push $DOCKER_REGISTRY/$APP_NAME:latest
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$CI_COMMIT_TAG
+    - aws ecs update-service --cluster $CLUSTER --service $SERVICE --force-new-deployment --region $REGION
   tags:
     - wmfbooks-docker-runner
 
