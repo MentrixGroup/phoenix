@@ -32,7 +32,16 @@ stages:
     BUCKET_NAME: $S3_BUCKET
     API_URL: ${API_URL}
 
-deploy to main:
+.be_env: &be_env
+  only:
+    - master
+  environment:
+    name: wmfbooks-main
+
+deploy to fe:
   <<: *fe_env
   <<: *run_deploy
+
+deploy to be:
+  <<: *be_env
   <<: *run_build
