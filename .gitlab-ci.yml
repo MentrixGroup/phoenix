@@ -1,0 +1,37 @@
+stages:
+  - build_api
+  - deploy_fe
+
+.run_deploy: &run_deploy
+  stage: deploy_fe
+  image: node:14-alpine
+  script:
+    - npm i --silent
+    - PUBLIC_URL=${CI_ENVIRONMENT_URL}  API_URL=${API_URL} npm run build
+    - npm i mime randomstring aws-sdk --silent
+    - BUILD_DIRECTORY=dist BUCKET_NAME=$BUCKET_NAME AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} npm run deploy-aws
+  tags:
+    - wmfbooks-docker-runner
+
+.run_deploy: &run_deploy
+  stage: build_api
+  image: golang:alpine
+  script:
+
+  tags:
+    - wmfbooks-docker-runner
+
+.fe_env: &fe_env
+  only:
+    changes:
+        - demo/*
+  environment:
+    name: wmfbooks-main
+  variables:
+    BUCKET_NAME: $S3_BUCKET
+    API_URL: ${API_URL}
+
+deploy to main:
+  <<: *fe_env
+  <<: *run_deploy
+  <<: *run_build
