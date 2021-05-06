@@ -6,6 +6,7 @@ stages:
   stage: deploy_fe
   image: node:14-alpine
   script:
+    - cd demo
     - npm i --silent
     - PUBLIC_URL=${CI_ENVIRONMENT_URL}  API_URL=${API_URL} npm run build
     - npm i mime randomstring aws-sdk --silent
