@@ -29,7 +29,7 @@ stages:
     - docker push $DOCKER_REGISTRY/$APP_NAME:$CI_COMMIT_TAG
     - aws ecs update-service --cluster $CLUSTER --service $SERVICE --force-new-deployment --region $REGION
   tags:
-    - test-docker
+    - wmfbooks-docker-runner
 
 .fe_env: &fe_env
   only:
