@@ -1,6 +1,7 @@
 FROM golang:alpine
 WORKDIR /app  
 COPY .  .
+RUN go version
 RUN ls -la
 RUN cd service/ && make build && \
     cd ../import/ && make build && \
