@@ -6,5 +6,5 @@ RUN ls -la
 RUN apk add --no-cache make
 RUN cd service/ && make build && \
     cd ../import/ && make build && \
-    cd ../event-bridge/stream/ && make build && \
-    cd ../publish/ && make build
+    cd ../event-bridge/stream/ && make  && \
+    cd ../publish/ && make 
