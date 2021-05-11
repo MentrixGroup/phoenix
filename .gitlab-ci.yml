@@ -37,7 +37,7 @@ stages:
   stage: lambda
   image: golang:alpine
   script:
-    - apk add --update --no-cache build-base python3-dev python3 libffi-dev libressl-dev bash git gettext curl
+    - apk add --update --no-cache build-base python3-dev python3 libffi-dev libressl-dev bash git gettext curl zip
     - apk add --no-cache make
     - curl -O https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && pip install --upgrade six awscli 
     - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
