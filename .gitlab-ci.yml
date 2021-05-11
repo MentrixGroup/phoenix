@@ -34,6 +34,7 @@ stages:
 
 .fe_env: &fe_env
   only:
+    - master
     changes:
         - demo/*
   environment:
