@@ -43,7 +43,7 @@ stages:
     - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
     - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
     - cp $DOTENV .config.mk
-    - cd lambda
+    - cd lambdas
     - cd fetch-changed && make deploy
     - cd ../fetch-schema.org && make deploy
     - cd ../merge-schema.org && make deploy
