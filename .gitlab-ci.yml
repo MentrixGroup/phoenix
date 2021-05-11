@@ -35,10 +35,9 @@ stages:
 .fe_env: &fe_env
   only:
     changes:
-      path:
-        - demo/*
-      target:
-        - master
+      - demo/*
+    refs:
+      - master
   environment:
     name: wmfbooks-main
   variables:
