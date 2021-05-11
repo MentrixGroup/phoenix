@@ -6,3 +6,4 @@ RUN cd service/ && make build && \
     cd ../import/ && make build && \
     cd ../event-bridge/stream/ && make  && \
     cd ../publish/ && make 
+EXPOSE 8080
