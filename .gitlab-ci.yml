@@ -1,6 +1,7 @@
 stages:
   - build_api
   - deploy_fe
+  - lambda
 
 .run_deploy: &run_deploy
   stage: deploy_fe
@@ -32,6 +33,26 @@ stages:
   tags:
     - wmfbooks-docker-runner
 
+.run_lambda: &run_lambda
+  stage: lambda
+  image: golang:alpine
+  script:
+    - apk add --update --no-cache build-base python3-dev python3 libffi-dev libressl-dev bash git gettext curl
+    - apk add --no-cache make
+    - curl -O https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && pip install --upgrade six awscli 
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY/$APP_NAME
+    - cp $DOTENV .config.mk
+    - cd lambda
+    - cd fetch-changed && make deploy
+    - cd ../fetch-schema.org && make deploy
+    - cd ../merge-schema.org && make deploy
+    - cd ../related-topics && make deploy
+    - cd ../transform-parsoid && make deploy
+  tags:
+    - wmfbooks-docker-runner
+
 .fe_env: &fe_env
   only:
     changes:
@@ -44,6 +65,12 @@ stages:
     BUCKET_NAME: $S3_BUCKET
     API_URL: ${API_URL}
 
+.lam_env: &lam_env
+  only:
+    - master
+  environment:
+    name: wmfbooks-main
+
 .be_env: &be_env
   variables:
     DOCKER_DRIVER: overlay
@@ -55,6 +82,10 @@ stages:
 deploy to fe:
   <<: *fe_env
   <<: *run_deploy
+
+deploy to serverless:
+  <<: *lam_env
+  <<: *run_lambda
 
 deploy to be:
   <<: *be_env
