@@ -18,5 +18,9 @@ func parseParsoidDocument(document *goquery.Document) (*common.Page, []common.No
 		return nil, nil, err
 	}
 
+	if _, err = parseParsoidDocumentCitation(document, page); err != nil {
+		return nil, nil, err
+	}
+
 	return page, nodes, nil
 }
