@@ -94,6 +94,7 @@ func Handler(title string, cl *Client) {
 
 	if wikitext, err = cl.GetWikitext(title); err != nil {
 		logger.Error("error making HTTP request: %w", err)
+		return
 	}
 
 	rx := regexp.MustCompile(`(?s)` + regexp.QuoteMeta(left) + `(.*?)` + regexp.QuoteMeta(right))

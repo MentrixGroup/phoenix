@@ -10,12 +10,15 @@ import (
 )
 
 var testAuthor = []string{"Fujia Yang", "Joseph H. Hamilton"}
+var testPage = "test_page"
 var handlerTestWikitext = fmt.Sprintf(`
-"parse": {
-	"title": "Albert Einstein",
-	"pageid": 2138,
-	"wikitext": "%s"
-`, testBook)
+{
+	"parse": {
+		"title": "Albert Einstein",
+		"pageid": 2138,
+		"wikitext": "%s"
+	}
+}`, testBook)
 
 var handlerTestCitation = `[
   {
@@ -68,6 +71,20 @@ var handlerTestCitation = `[
 ]`
 
 func getWikitextTestHandler(rw http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["page"]
+
+	if !ok || len(keys[0]) < 1 {
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	page := keys[0]
+
+	if page != testPage {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	_, _ = rw.Write([]byte(handlerTestWikitext))
 }
 
@@ -80,9 +97,8 @@ func badReqTestHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 const (
-	testWiki     = "/wiki"
-	testCitation = "/citation"
-	testBadReq   = "/"
+	testWiki     = "/w/api.php"
+	testCitation = "/api/rest_v1/data/citation/mediawiki/test_isbn"
 )
 
 func createTestServer() http.Handler {
@@ -90,7 +106,6 @@ func createTestServer() http.Handler {
 
 	srv.HandleFunc(testWiki, getWikitextTestHandler)
 	srv.HandleFunc(testCitation, getCitationTestHandler)
-	srv.HandleFunc(testBadReq, badReqTestHandler)
 
 	return srv
 }
@@ -103,21 +118,25 @@ func TestClient(t *testing.T) {
 	client := NewClient(srv.URL)
 
 	t.Run("get wikitext", func(t *testing.T) {
-		data, err := client.get(testWiki)
+		data, err := client.GetWikitext(testPage)
 
 		assert.NoError(err)
-		assert.Equal(handlerTestWikitext, string(data))
+		assert.Equal(testBook, data)
 	})
 
 	t.Run("get citation", func(t *testing.T) {
-		data, err := client.get(testCitation)
+		testCitoidBook := &CitoidBook{
+			Numpages: "xliv, 940 pages",
+		}
+
+		data, err := client.GetCitoidBook("test_isbn")
 
 		assert.NoError(err)
-		assert.Equal(handlerTestCitation, string(data))
+		assert.Equal(testCitoidBook.Numpages, data.Numpages)
 	})
 
 	t.Run("get citation fail", func(t *testing.T) {
-		_, err := client.get(testBadReq)
+		_, err := client.GetWikitext("not_found")
 
 		assert.Error(err)
 	})
