@@ -4,7 +4,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -59,28 +58,24 @@ const (
 
 var logger *common.Logger
 
-func regx(p string) string {
-	return fmt.Sprintf(`(?s)%s[ \t]*=[ \t]*(.*?)\|`, regexp.QuoteMeta(p))
-}
-
-func snmatch(s string, matcher string) []string {
-	a := make([]string, 0)
-	r := regexp.MustCompile(fmt.Sprintf(`(?s)%s[0-9][ \t]*=[ \t]*(.*?)\|`, matcher))
-	matches := r.FindAllStringSubmatch(s, -1)
+func snmatch(str string, matcher string) []string {
+	match := make([]string, 0)
+	rgx := regexp.MustCompile(fmt.Sprintf(`(?s)%s[0-9][ \t]*=[ \t]*(.*?)\|`, matcher))
+	matches := rgx.FindAllStringSubmatch(str, -1)
 
 	if len(matches) > 0 {
 		for _, v := range matches {
-			a = append(a, strings.TrimSpace(v[1]))
+			match = append(match, strings.TrimSpace(v[1]))
 		}
 
-		return a
+		return match
 	}
 
-	return a
+	return match
 }
 
 func smatch(s string, matcher string) string {
-	r := regexp.MustCompile(regx(matcher))
+	r := regexp.MustCompile(fmt.Sprintf(`(?s)%s[ \t]*=[ \t]*(.*?)\|`, regexp.QuoteMeta(matcher)))
 	matches := r.FindStringSubmatch(s)
 
 	if len(matches) > 0 {
@@ -90,45 +85,23 @@ func smatch(s string, matcher string) string {
 	return ""
 }
 
-func saveBook(b *Book, title string) {
-	f, err := os.Create(fmt.Sprintf("%s.json", title))
-	if err != nil {
-		log.Panic(err)
-	}
-
-	defer f.Close()
-
-	if err := json.NewEncoder(f).Encode(b); err != nil {
-		log.Panic(err)
-	}
-}
-
-func Handler(t string, cl *Client) {
-	page := &WikiPage{}
+func Handler(title string, cl *Client) {
 	books := make([]Book, 0)
-	query := fmt.Sprintf("/w/api.php?action=parse&format=json&page=%s&prop=wikitext&formatversion=2", t)
-	// Perform the HTTP request
-	var body []byte
+
+	var cbook *CitoidBook
+	var wikitext string
 	var err error
 
-	if body, err = cl.get(query); err != nil {
+	if wikitext, err = cl.GetWikitext(title); err != nil {
 		logger.Error("error making HTTP request: %w", err)
 	}
 
-	if err := json.Unmarshal(body, page); err != nil {
-		logger.Error("error unmarshaling data: %w", err)
-	}
-
-	wikitext := page.Parse.Wikitext
 	rx := regexp.MustCompile(`(?s)` + regexp.QuoteMeta(left) + `(.*?)` + regexp.QuoteMeta(right))
 
 	matches := rx.FindAllStringSubmatch(wikitext, -1)
 
 	for _, v := range matches {
-		cbook := &CitoidBooks{}
 		line := fmt.Sprintf("%s%s", strings.TrimSpace(v[1]), "|")
-
-		editor := fmt.Sprintf("%s %s", smatch(line, "first"), smatch(line, "last"))
 
 		book := &Book{
 			Date:      smatch(line, "date"),
@@ -137,24 +110,29 @@ func Handler(t string, cl *Client) {
 			Isbn:      smatch(line, "isbn"),
 			URL:       smatch(line, "url"),
 			Author:    snmatch(line, "author"),
-			Editor:    editor,
+			Editor:    fmt.Sprintf("%s %s", smatch(line, "first"), smatch(line, "last")),
 		}
 
 		books = append(books, *book)
 
-		if body, err = cl.get(fmt.Sprintf("/api/rest_v1/data/citation/mediawiki/%s", book.Isbn)); err != nil {
-			logger.Error("Error making HTTP request: %w", err)
+		if cbook, err = cl.GetCitoidBook(book.Isbn); err != nil {
+			logger.Error("Error getting citoid books: %w", err)
 		}
 
-		if err := json.Unmarshal(body, &cbook.Books); err != nil {
-			logger.Error("Error unmarshaling data: %w", err)
+		if cbook != nil {
+			book.Numpages = cbook.Numpages
 		}
 
-		if len(cbook.Books) > 0 {
-			book.Numpages = cbook.Books[0].Numpages
+		f, err := os.Create(fmt.Sprintf("%s.json", fmt.Sprintf("%s_%s", title, book.Title)))
+		if err != nil {
+			logger.Error("Error creating JSON file: %w", err)
 		}
 
-		saveBook(book, fmt.Sprintf("%s_%s", t, book.Title))
+		defer f.Close()
+
+		if err := json.NewEncoder(f).Encode(book); err != nil {
+			logger.Error("Error encoding JSON file: %w", err)
+		}
 	}
 
 }
