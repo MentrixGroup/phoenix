@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/wikimedia/phoenix/common"
 )
 
@@ -30,9 +31,10 @@ func getCitationIds(section *goquery.Selection, page string) []string {
 	return ids
 }
 
-func getCitation(document *goquery.Document, cId, page string) (common.Citation, error) {
+func getCitation(document *goquery.Document, cId, page string, section string, snsClient *sns.SNS) (common.Citation, error) {
 	var err error
 	var unsafe string
+
 	citation := common.Citation{}
 
 	slct := document.Find(fmt.Sprintf("#%s", cId))
@@ -40,7 +42,9 @@ func getCitation(document *goquery.Document, cId, page string) (common.Citation,
 	if len(slct.Nodes) <= 0 {
 		return citation, fmt.Errorf(fmt.Sprintf("No element was found with id=%s found", cId))
 	}
+
 	li := slct.Eq(0)
+	isbn := li.Find("bdi").First().Text()
 
 	if unsafe, err = li.Html(); err != nil {
 		return citation, fmt.Errorf("error during getting list item HTML content")
@@ -50,10 +54,16 @@ func getCitation(document *goquery.Document, cId, page string) (common.Citation,
 	citation.References = getRefs(li, page)
 	citation.Text = unsafe
 
+	if isbn != "" && validate(isbn) {
+		citation.Source = getSourceId(isbn)
+
+		sourceParseEvent(snsClient, &common.SourseParseEvent{ID: isbn, Page: page, Section: section})
+	}
+
 	return citation, nil
 }
 
-func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page) ([]common.Node, []common.Citations, error) {
+func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page, snsClient *sns.SNS) ([]common.Node, []common.Citations, error) {
 	var err error
 	var modified = page.DateModified
 	var nameCounts = make(map[string]int)
@@ -68,18 +78,8 @@ func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page) ([
 		var unsafe string
 		var nodeCites = make([]common.Citation, 0)
 
-		for _, id := range getCitationIds(section, page.Name) {
-			ct, err := getCitation(document, id, page.Name)
-
-			if err != nil {
-				fmt.Println(fmt.Sprintf("problem with creating citation: %s", err))
-			}
-			nodeCites = append(nodeCites, ct)
-		}
-
 		node.Source = page.Source
 
-		ct.Citations = nodeCites
 		// If this is the first section and the name is a zero length string, then we assign it
 		// a constant to simplify lookups
 		if i == 0 {
@@ -100,9 +100,20 @@ func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page) ([
 			node.Name = fmt.Sprintf("%s_%d", node.Name, nameCounts[strings.ToLower(node.Name)])
 		}
 
-		node.DateModified = modified
+		for _, id := range getCitationIds(section, page.Name) {
+			ct, err := getCitation(document, id, page.Name, node.Name, snsClient)
 
-		node.HasPart = []string{fmt.Sprintf("nodes/%s_%s_citations.json", replaceSpaces(page.Name), replaceSpaces(node.Name))}
+			if err != nil {
+				fmt.Println(fmt.Sprintf("problem with creating citation: %s", err))
+			}
+			nodeCites = append(nodeCites, ct)
+		}
+
+		ct.Citations = nodeCites
+
+		node.DateModified = modified
+		unqn := fmt.Sprintf("%s_%s", replaceSpaces(page.Name), replaceSpaces(node.Name))
+		node.HasPart = []string{fmt.Sprintf("sections/%s/%s_citations.json", unqn, unqn)}
 
 		if val, ok := ignoredNodes[node.Name]; ok && val {
 			continue
@@ -112,7 +123,7 @@ func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page) ([
 			return []common.Node{}, []common.Citations{}, err
 		}
 
-		node.ID = fmt.Sprintf("nodes/%s_%s", replaceSpaces(page.Name), replaceSpaces(node.Name))
+		node.ID = fmt.Sprintf("sections/%s/%s", unqn, unqn)
 		ct.IsPartOf = []string{node.ID}
 		node.Unsafe = unsafe
 		nodes = append(nodes, node)

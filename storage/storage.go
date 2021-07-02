@@ -376,14 +376,14 @@ func (r *Repository) Apply(update *Update) error {
 	for i, node := range update.Nodes {
 		var err error
 
-		node.IsPartOf = []string{update.Page.ID}
+		node.IsPartOf = []string{fmt.Sprintf("%s.json", update.Page.ID)}
 		node.Source = update.Page.Source
 
 		if err = r.PutNode(&node); err != nil {
 			return fmt.Errorf("error storing node: %w", err)
 		}
 
-		update.Page.HasPart = append(update.Page.HasPart, update.Nodes[i].ID)
+		update.Page.HasPart = append(update.Page.HasPart, fmt.Sprintf("%s.json", update.Nodes[i].ID))
 
 		if update.PostPutNodeCallback != nil {
 			// FIXME: Should we handle the error?  Ignore it?
@@ -396,7 +396,7 @@ func (r *Repository) Apply(update *Update) error {
 	// Upload linked data objects.
 	for k, v := range update.Abouts {
 		var err error
-		v.ID = fmt.Sprintf("pages/%s_about_%s", strings.ReplaceAll(update.Page.Name, " ", "_"), k)
+		v.ID = fmt.Sprintf("pages/%s/%s_about_%s", strings.ReplaceAll(update.Page.Name, " ", "_"), k)
 
 		if err = r.PutAbout(&v); err != nil {
 			return fmt.Errorf("error storing linked data object: %w", err)

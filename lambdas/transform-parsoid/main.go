@@ -35,6 +35,7 @@ var (
 	s3RawIncomeFolder         string
 	s3RawLinkedFolder         string
 	snsNodePublished          string
+	snsSourceParse            string
 
 	debug bool = false
 	log   *common.Logger
@@ -71,6 +72,46 @@ func readLinkedData(s3client *s3.S3, msg *common.ChangeEvent) (*common.Thing, er
 	return thing, nil
 }
 
+func sendSnsEvent(snsClient *sns.SNS, topic string, data []byte) error {
+	var err error
+	var input *sns.PublishInput
+	var output *sns.PublishOutput
+
+	input = &sns.PublishInput{
+		Message:  aws.String(string(data)),
+		TopicArn: aws.String(fmt.Sprintf("arn:aws:sns:%s:%s:%s", awsRegion, awsAccount, topic)),
+	}
+
+	// Publish to SNS
+	if output, err = snsClient.Publish(input); err != nil {
+		log.Error("Failed to publish SNS event: %s", err)
+		return fmt.Errorf("Failed to publish SNS event: %w", err)
+	}
+
+	log.Debug("Successfully published SNS message: %s", *output.MessageId)
+
+	return nil
+}
+
+func sourceParseEvent(snsClient *sns.SNS, source *common.SourseParseEvent) error {
+	var b []byte
+	var err error
+
+	// JSON-encoded SNS message
+	if b, err = json.Marshal(source); err != nil {
+		log.Error("Unable to marhsal SNS event to JSON: %s", err)
+		return fmt.Errorf("Unable to marshal SNS event to JSON: %w", err)
+	}
+
+	// Publish to SNS
+	if err = sendSnsEvent(snsClient, snsSourceParse, b); err != nil {
+		log.Error("%s", err)
+		return fmt.Errorf("%w", err)
+	}
+
+	return nil
+}
+
 // A helper function that returns a PostPutNodeCallback function conditional on a env variable.
 func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 	var disabled = false
@@ -86,8 +127,6 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 		return func(node common.Node) error {
 			var b []byte
 			var err error
-			var input *sns.PublishInput
-			var output *sns.PublishOutput
 
 			// JSON-encoded SNS message
 			if b, err = json.Marshal(common.NodeStoredEvent{ID: node.ID}); err != nil {
@@ -95,18 +134,11 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 				return fmt.Errorf("Unable to marshal SNS event to JSON: %w", err)
 			}
 
-			input = &sns.PublishInput{
-				Message:  aws.String(string(b)),
-				TopicArn: aws.String(fmt.Sprintf("arn:aws:sns:%s:%s:%s", awsRegion, awsAccount, snsNodePublished)),
-			}
-
 			// Publish to SNS
-			if output, err = snsClient.Publish(input); err != nil {
-				log.Error("Failed to publish SNS event: %s", err)
-				return fmt.Errorf("Failed to publish SNS event: %w", err)
+			if err = sendSnsEvent(snsClient, snsNodePublished, b); err != nil {
+				log.Error("%s", err)
+				return fmt.Errorf("%w", err)
 			}
-
-			log.Debug("Successfully published SNS message: %s (%s stored)", *output.MessageId, node.ID)
 
 			return nil
 		}
@@ -161,7 +193,7 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 
 		log.Debug("Parsing html parsoid document...")
 
-		page, nodes, nodeCits, citsEnhanced, citation, err := parseParsoidDocument(document)
+		page, nodes, nodeCits, citsEnhanced, citation, err := parseParsoidDocument(document, snsClient)
 
 		if err != nil {
 			log.Error("Unable to parse parsoid document (%+v) with error: %s (+%v)", msg, err)
@@ -221,86 +253,6 @@ func init() {
 	log.Debug("SNS node published topic .........: %s", snsNodePublished)
 }
 
-// func localParser() {
-// 	var citations *Citations
-
-// 	file, err := ioutil.ReadFile("./Albert_Einstein-7522439.html")
-
-// 	if err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to read html document with error: %s", err))
-// 		return
-// 	}
-
-// 	data := bytes.NewReader(file)
-
-// 	document, err := goquery.NewDocumentFromReader(data)
-
-// 	if err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to create html document with error: %s", err))
-// 		return
-// 	}
-
-// 	fmt.Println("Parsing html parsoid document...")
-
-// 	_, nodes, cts, citations, ref, err := parseParsoidDocument(document)
-
-// 	if err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to parse html document with error: %s", err))
-// 		return
-// 	}
-
-// 	r, err := os.Create("Albert_citations.json")
-
-// 	if err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
-// 		return
-// 	}
-
-// 	c, err := os.Create(fmt.Sprintf("Albert_%s_citations.json", nodes[1].Name))
-
-// 	if err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
-// 		return
-// 	}
-
-// 	f, err := os.Create("Albert_citations_enhanced.json")
-
-// 	if err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
-// 		return
-// 	}
-
-// 	fn, err := os.Create("Albert_nodes.json")
-
-// 	if err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
-// 		return
-// 	}
-// 	defer fn.Close()
-// 	defer f.Close()
-// 	defer c.Close()
-// 	defer r.Close()
-
-// 	if err := json.NewEncoder(f).Encode(citations); err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
-// 		return
-// 	}
-
-// 	if err := json.NewEncoder(fn).Encode(nodes); err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
-// 		return
-// 	}
-
-// 	if err := json.NewEncoder(c).Encode(cts[1]); err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
-// 		return
-// 	}
-
-// 	if err := json.NewEncoder(r).Encode(ref); err != nil {
-// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
-// 		return
-// 	}
-// }
 func main() {
 	lambda.Start(handleRequest)
 }

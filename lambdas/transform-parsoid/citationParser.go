@@ -46,6 +46,7 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 
 		for j := range litems.Nodes {
 			li := litems.Eq(j)
+			isbn := li.Find("bdi").First().Text()
 
 			if unsafe, err = li.Html(); err != nil {
 				fmt.Println("error during getting list item HTML content")
@@ -56,6 +57,10 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 				Identifier: li.AttrOr("id", ""),
 				Text:       unsafe,
 				References: getRefs(li, page.Name),
+			}
+
+			if isbn != "" && validate(isbn) {
+				citation.Source = getSourceId(isbn)
 			}
 
 			citations.Citations = append(citations.Citations, citation)
@@ -71,7 +76,7 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 	}
 
 	citations.IsPartOf = []string{page.ID}
-	node.ID = fmt.Sprintf("pages/%s_citations", replaceSpaces(page.Name))
+	node.ID = fmt.Sprintf("pages/%s/%s_citations", replaceSpaces(page.Name), replaceSpaces(page.Name))
 	node.Unsafe = unsafe
 
 	return citations, node, nil
