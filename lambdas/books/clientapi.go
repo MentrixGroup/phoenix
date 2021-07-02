@@ -22,6 +22,26 @@ type Client struct {
 	baseURL    string
 }
 
+type GoogleBook struct {
+	Volumeinfo struct {
+		Title         string   `json:"title"`
+		Subtitle      string   `json:"subtitle"`
+		Authors       []string `json:"authors"`
+		Publisher     string   `json:"publisher"`
+		Publisheddate string   `json:"publishedDate"`
+		Imagelinks    struct {
+			Smallthumbnail string `json:"smallThumbnail"`
+			Thumbnail      string `json:"thumbnail"`
+		} `json:"imageLinks"`
+	} `json:"volumeInfo"`
+}
+
+type GoogleBooksResponse struct {
+	Kind       string       `json:"kind"`
+	Totalitems int          `json:"totalItems"`
+	Items      []GoogleBook `json:"items"`
+}
+
 func (c *Client) get(query string) ([]byte, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", c.baseURL, query), nil)
 	if err != nil {
@@ -62,6 +82,35 @@ func (c *Client) GetWikitext(title string) (string, error) {
 	}
 
 	return page.Parse.Wikitext, nil
+}
+
+func (c *Client) GetBook(isbn string) (*common.Book, error) {
+	var body []byte
+	var err error
+
+	response := &GoogleBooksResponse{}
+	query := fmt.Sprintf("/books/v1/volumes?q=isbn:%s", isbn)
+
+	if body, err = c.get(query); err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(body, response); err != nil {
+		return nil, err
+	}
+
+	gbook := response.Items[0].Volumeinfo
+
+	book := &common.Book{
+		Isbn:          isbn,
+		Name:          fmt.Sprintf("%s: %s", gbook.Title, gbook.Subtitle),
+		Author:        gbook.Authors,
+		Publisher:     gbook.Publisher,
+		Datepublished: gbook.Publisheddate,
+		Thumbnailurl:  gbook.Imagelinks.Thumbnail,
+	}
+
+	return book, nil
 }
 
 func (c *Client) GetCitoidBook(isbn string) (*CitoidBook, error) {

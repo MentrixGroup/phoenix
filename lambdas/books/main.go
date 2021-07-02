@@ -2,13 +2,37 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
 
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/wikimedia/phoenix/common"
+	"github.com/wikimedia/phoenix/storage"
+)
+
+var (
+	// These values are passed in at build-time w/ -ldflags (see: Makefile)
+	awsRegion                 string
+	awsAccount                string
+	dynamoDBPageTitles        string
+	dynamoDBNodeNames         string
+	s3StructuredContentBucket string
+	s3RawBucket               string
+	s3RawIncomeFolder         string
+	s3RawLinkedFolder         string
+	snsNodePublished          string
+
+	debug bool = false
+	log   *common.Logger
 )
 
 type CitoidBooks struct {
@@ -32,14 +56,12 @@ type CitoidBook struct {
 }
 
 type Book struct {
-	Date      string   `json:"date"`
-	Publisher string   `json:"publisher"`
-	Title     string   `json:"title"`
-	Isbn      string   `json:"isbn"`
-	URL       string   `json:"url"`
-	Author    []string `json:"author"`
-	Editor    string   `json:"editor"`
-	Numpages  string   `json:"numberOfPages"`
+	Isbn          string   `json:"isbn"`
+	Name          string   `json:"name"`
+	Author        []string `json:"author"`
+	Publisher     string   `json:"publisher"`
+	Datepublished string   `json:"datePublished"`
+	Thumbnailurl  string   `json:"thumbnailUrl"`
 }
 
 type WikiPage struct {
@@ -51,9 +73,7 @@ type WikiPage struct {
 }
 
 const (
-	left    = "{{cite book"
-	right   = "}}"
-	baseURL = "https://simple.wikipedia.org"
+	baseURL = "https://www.googleapis.com"
 )
 
 var logger *common.Logger
@@ -85,57 +105,36 @@ func smatch(s string, matcher string) string {
 	return ""
 }
 
-func Handler(title string, cl *Client) {
-	books := make([]Book, 0)
-
-	var cbook *CitoidBook
-	var wikitext string
+func Handler(ctx context.Context, event events.SNSEvent, cl *Client) {
+	var book *common.Book
 	var err error
 
-	if wikitext, err = cl.GetWikitext(title); err != nil {
-		logger.Error("error making HTTP request: %w", err)
-		return
+	awsSession := session.New(&aws.Config{Region: aws.String(awsRegion)})
+	s3client := s3.New(awsSession)
+
+	repo := storage.Repository{
+		Store:  s3client,
+		Index:  &storage.DynamoDBIndex{Client: dynamodb.New(awsSession), TitlesTable: dynamoDBPageTitles, NamesTable: dynamoDBNodeNames},
+		Bucket: s3StructuredContentBucket,
 	}
 
-	rx := regexp.MustCompile(`(?s)` + regexp.QuoteMeta(left) + `(.*?)` + regexp.QuoteMeta(right))
-
-	matches := rx.FindAllStringSubmatch(wikitext, -1)
-
-	for _, v := range matches {
-		line := fmt.Sprintf("%s%s", strings.TrimSpace(v[1]), "|")
-
-		book := &Book{
-			Date:      smatch(line, "date"),
-			Publisher: smatch(line, "publisher"),
-			Title:     smatch(line, "title"),
-			Isbn:      smatch(line, "isbn"),
-			URL:       smatch(line, "url"),
-			Author:    snmatch(line, "author"),
-			Editor:    fmt.Sprintf("%s %s", smatch(line, "first"), smatch(line, "last")),
+	for _, record := range event.Records {
+		msg := &common.SourceParseEvent{}
+		if err := json.Unmarshal([]byte(record.SNS.Message), msg); err != nil {
+			log.Error("Unable to deserialize message payload:", err)
+			continue
 		}
 
-		books = append(books, *book)
-
-		if cbook, err = cl.GetCitoidBook(book.Isbn); err != nil {
-			logger.Error("Error getting citoid books: %w", err)
+		if book, err = cl.GetBook(msg.isbn); err != nil {
+			logger.Error("error making HTTP request: %w", err)
+			return
 		}
 
-		if cbook != nil {
-			book.Numpages = cbook.Numpages
-		}
-
-		f, err := os.Create(fmt.Sprintf("%s.json", fmt.Sprintf("%s_%s", title, book.Title)))
-		if err != nil {
-			logger.Error("Error creating JSON file: %w", err)
-		}
-
-		defer f.Close()
-
-		if err := json.NewEncoder(f).Encode(book); err != nil {
-			logger.Error("Error encoding JSON file: %w", err)
+		if err = repo.PutBook(book); err != nil {
+			logger.Error("error saving Book to the store: %w", err)
+			return
 		}
 	}
-
 }
 
 func init() {
@@ -146,11 +145,24 @@ func init() {
 	}
 
 	// Initialize the logger
-	logger = common.NewLogger(level)
+	log = common.NewLogger(level)
+	log.Warn("%s LOGGING ENABLED (use LOG_LEVEL env var to configure)", common.LevelString(log.Level))
+
+	log.Debug("AWS account ......................: %s", awsAccount)
+	log.Debug("AWS region .......................: %s", awsRegion)
+	log.Debug("DynamoDB page titles table .......: %s", dynamoDBPageTitles)
+	log.Debug("DynamoDB node names table ........: %s", dynamoDBNodeNames)
+	log.Debug("S3 structured content bucket .....: %s", s3StructuredContentBucket)
+	log.Debug("S3 raw content bucket ............: %s", s3RawBucket)
+	log.Debug("S3 raw content incoming folder ...: %s", s3RawIncomeFolder)
+	log.Debug("S3 raw content linked folder .....: %s", s3RawLinkedFolder)
+	log.Debug("SNS node published topic .........: %s", snsNodePublished)
 }
 
 func main() {
-	cl := NewClient(baseURL)
+	lambda.Start(func(ctx context.Context, event events.SNSEvent) {
+		cl := NewClient(baseURL)
 
-	Handler("Albert_Einstein", cl)
+		Handler(ctx, event, cl)
+	})
 }
