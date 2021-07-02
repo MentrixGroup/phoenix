@@ -7,7 +7,8 @@
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "local": "NODE_ENV=localgraphql vue-cli-service serve --port 9090",
-    "phoenix": "cd ../service/ && go run service.go"
+    "phoenix": "cd ../service/ && go run service.go",
+    "deploy-aws": "node aws-deploy.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",

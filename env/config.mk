@@ -1,7 +1,7 @@
 
-PHX_ACCOUNT_ID               = 113698225543
-PHX_DEFAULT_REGION           = us-east-2
-PHX_PREFIX                   = scpoc
+PHX_ACCOUNT_ID               = 103068880748
+PHX_DEFAULT_REGION           = us-east-1
+PHX_PREFIX                   = wmfbooks
 
 ######
 # SNS resources
@@ -30,7 +30,7 @@ PHX_SNS_NODE_PUBLISHED            = $(PHX_PREFIX)-sns-node-published
 
 # The "raw content" bucket; Corresponds with uses of "raw content
 # store" in the architecture documents.
-PHX_S3_RAW_CONTENT_BUCKET        = $(PHX_PREFIX)-raw-content-store
+PHX_S3_RAW_CONTENT_BUCKET        = $(PHX_PREFIX)-raw-content
 
 # Folder where HTML documents of a corresponding revision are
 # downloaded to after a change event is received.
@@ -44,7 +44,7 @@ PHX_S3_RAW_CONTENT_LINKED_HTML   = linked-html
 
 # The "structured content" bucket, where parsed and transformed data are
 # stored in canonical format
-PHX_S3_STRUCTURED_CONTENT_BUCKET = $(PHX_PREFIX)-structured-content-store
+PHX_S3_STRUCTURED_CONTENT_BUCKET = $(PHX_PREFIX)-structured-content
 
 
 ######
@@ -84,10 +84,10 @@ PHX_LAMBDA_RELATED_TOPICS = $(PHX_PREFIX)-lambda-related-topics
 ######
 
 # Table used to index page titles
-PHX_DYNAMODB_PAGE_TITLES = $(PHX_PREFIX)-dynamodb-page-titles
+PHX_DYNAMODB_PAGE_TITLES = $(PHX_PREFIX)-page-titles
 
 # Table used to index node names
-PHX_DYNAMODB_NODE_NAMES  = $(PHX_PREFIX)-dynamodb-node-names
+PHX_DYNAMODB_NODE_NAMES  = $(PHX_PREFIX)-node-names
 
 
 ######
@@ -101,11 +101,11 @@ PHX_ROSETTE_API_KEY = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ######
 
 # Use ../.config.mk to specify actual credentials
-PHX_SEARCH_USERNAME   = fauxuser
-PHX_SEARCH_PASSWORD   = fauxpass
+PHX_SEARCH_USERNAME   = wmfbooks-es-user
+PHX_SEARCH_PASSWORD   = Wmfbooksespass_1
 
 # Elasticsearch endpoint URL
-PHX_SEARCH_ENDPOINT   = https://search-scpoc-phoenix-zti4iohw623mbsmdabsrmhybm4.us-east-2.es.amazonaws.com
+PHX_SEARCH_ENDPOINT   = https://vpc-wmfbooks-es-e5tneoamgaiqiz67nbufjhrpla.us-east-1.es.amazonaws.com
 
 # Elasticsearch index name for related topics indexing
 PHX_SEARCH_IDX_TOPICS = topics
