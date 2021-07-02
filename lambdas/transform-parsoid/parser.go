@@ -5,22 +5,26 @@ import (
 	"github.com/wikimedia/phoenix/common"
 )
 
-func parseParsoidDocument(document *goquery.Document) (*common.Page, []common.Node, error) {
+func parseParsoidDocument(document *goquery.Document) (*common.Page, []common.Node, []common.Citations, *common.Citations, *common.Node, error) {
 	var err error
 	var page *common.Page
 	var nodes []common.Node
+	var ref *common.Node
+	var cts []common.Citations
+	var citations *common.Citations
 
 	if page, err = parseParsoidDocumentPage(document); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 
-	if nodes, err = parseParsoidDocumentNodes(document, page); err != nil {
-		return nil, nil, err
+	if nodes, cts, err = parseParsoidDocumentNodes(document, page); err != nil {
+		return nil, nil, nil, nil, nil, err
 	}
 
-	if _, err = parseParsoidDocumentCitation(document, page); err != nil {
-		return nil, nil, err
+	if citations, ref, err = parseParsoidDocumentCitation(document, page); err != nil {
+		return nil, nil, nil, nil, nil, err
 	}
 
-	return page, nodes, nil
+	// Page, Nodes, Nodes Citations, Page Citations Enhanced, Page Citations Node.
+	return page, nodes, cts, citations, ref, nil
 }

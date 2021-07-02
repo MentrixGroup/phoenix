@@ -132,5 +132,7 @@ func parseParsoidDocumentPage(document *goquery.Document) (*common.Page, error) 
 
 	page.Source.Authority = pageURL.Hostname()
 
+	page.ID = fmt.Sprintf("pages/%s", replaceSpaces(page.Name))
+
 	return page, nil
 }

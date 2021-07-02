@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-lambda-go/events"
@@ -41,6 +42,10 @@ var (
 
 func keyf(msg *common.ChangeEvent) string {
 	return fmt.Sprintf("%s/%s/%s-%d", s3RawIncomeFolder, msg.ServerName, msg.Title, msg.Revision)
+}
+
+func replaceSpaces(str string) string {
+	return strings.ReplaceAll(str, " ", "_")
 }
 
 func readLinkedData(s3client *s3.S3, msg *common.ChangeEvent) (*common.Thing, error) {
@@ -156,7 +161,7 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 
 		log.Debug("Parsing html parsoid document...")
 
-		page, nodes, err := parseParsoidDocument(document)
+		page, nodes, nodeCits, citsEnhanced, citation, err := parseParsoidDocument(document)
 
 		if err != nil {
 			log.Error("Unable to parse parsoid document (%+v) with error: %s (+%v)", msg, err)
@@ -174,9 +179,12 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 		log.Debug("Saving document in canonical format...")
 
 		saveError := repo.Apply(&storage.Update{
-			Page:   *page,
-			Nodes:  nodes,
-			Abouts: map[string]common.Thing{"//schema.org": *thing},
+			Page:             *page,
+			Citation:         *citation,
+			CitationEnhanced: *citsEnhanced,
+			Nodes:            nodes,
+			NodesCitations:   nodeCits,
+			Abouts:           map[string]common.Thing{"//schema.org": *thing},
 
 			// Send events for each node published
 			PostPutNodeCallback: postPutNodeCallback(snsClient),
@@ -213,6 +221,86 @@ func init() {
 	log.Debug("SNS node published topic .........: %s", snsNodePublished)
 }
 
+// func localParser() {
+// 	var citations *Citations
+
+// 	file, err := ioutil.ReadFile("./Albert_Einstein-7522439.html")
+
+// 	if err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to read html document with error: %s", err))
+// 		return
+// 	}
+
+// 	data := bytes.NewReader(file)
+
+// 	document, err := goquery.NewDocumentFromReader(data)
+
+// 	if err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to create html document with error: %s", err))
+// 		return
+// 	}
+
+// 	fmt.Println("Parsing html parsoid document...")
+
+// 	_, nodes, cts, citations, ref, err := parseParsoidDocument(document)
+
+// 	if err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to parse html document with error: %s", err))
+// 		return
+// 	}
+
+// 	r, err := os.Create("Albert_citations.json")
+
+// 	if err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
+// 		return
+// 	}
+
+// 	c, err := os.Create(fmt.Sprintf("Albert_%s_citations.json", nodes[1].Name))
+
+// 	if err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
+// 		return
+// 	}
+
+// 	f, err := os.Create("Albert_citations_enhanced.json")
+
+// 	if err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
+// 		return
+// 	}
+
+// 	fn, err := os.Create("Albert_nodes.json")
+
+// 	if err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to create document with error: %s", err))
+// 		return
+// 	}
+// 	defer fn.Close()
+// 	defer f.Close()
+// 	defer c.Close()
+// 	defer r.Close()
+
+// 	if err := json.NewEncoder(f).Encode(citations); err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
+// 		return
+// 	}
+
+// 	if err := json.NewEncoder(fn).Encode(nodes); err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
+// 		return
+// 	}
+
+// 	if err := json.NewEncoder(c).Encode(cts[1]); err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
+// 		return
+// 	}
+
+// 	if err := json.NewEncoder(r).Encode(ref); err != nil {
+// 		fmt.Println(fmt.Sprintf("Unable to encode json document with error: %s", err))
+// 		return
+// 	}
+// }
 func main() {
 	lambda.Start(handleRequest)
 }
