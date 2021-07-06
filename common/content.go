@@ -109,5 +109,5 @@ type Citation struct {
 // Citations citations collection
 type Citations struct {
 	Citations []Citation `json:"citations"`
-	IsPartOf  []string   `json:"isPartOf"`
+	IsPartOf  []string   `json:"is_part_of"`
 }

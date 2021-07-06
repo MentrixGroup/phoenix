@@ -72,7 +72,7 @@ func readLinkedData(s3client *s3.S3, msg *common.ChangeEvent) (*common.Thing, er
 	return thing, nil
 }
 
-func sendSnsEvent(snsClient *sns.SNS, topic string, data []byte) error {
+func sendSnsEvent(snsClient *sns.SNS, topic string, data []byte) (*sns.PublishOutput, error) {
 	var err error
 	var input *sns.PublishInput
 	var output *sns.PublishOutput
@@ -84,32 +84,28 @@ func sendSnsEvent(snsClient *sns.SNS, topic string, data []byte) error {
 
 	// Publish to SNS
 	if output, err = snsClient.Publish(input); err != nil {
-		log.Error("Failed to publish SNS event: %s", err)
-		return fmt.Errorf("Failed to publish SNS event: %w", err)
+		return nil, err
 	}
 
-	log.Debug("Successfully published SNS message: %s", *output.MessageId)
-
-	return nil
+	return output, nil
 }
 
-func sourceParseEvent(snsClient *sns.SNS, source *common.SourseParseEvent) error {
+func sourceParseEvent(snsClient *sns.SNS, source *common.SourseParseEvent) (*sns.PublishOutput, error) {
 	var b []byte
 	var err error
+	var output *sns.PublishOutput
 
 	// JSON-encoded SNS message
 	if b, err = json.Marshal(source); err != nil {
-		log.Error("Unable to marhsal SNS event to JSON: %s", err)
-		return fmt.Errorf("Unable to marshal SNS event to JSON: %w", err)
+		return nil, err
 	}
 
 	// Publish to SNS
-	if err = sendSnsEvent(snsClient, snsSourceParse, b); err != nil {
-		log.Error("%s", err)
-		return fmt.Errorf("%w", err)
+	if output, err = sendSnsEvent(snsClient, snsSourceParse, b); err != nil {
+		return nil, err
 	}
 
-	return nil
+	return output, nil
 }
 
 // A helper function that returns a PostPutNodeCallback function conditional on a env variable.

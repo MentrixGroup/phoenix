@@ -36,7 +36,6 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 	var node = &common.Node{}
 
 	citations := &common.Citations{}
-
 	references := document.Find(slct)
 	refSec := references.Closest("section").Eq(0)
 
@@ -68,7 +67,6 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 	}
 
 	node.Name = getSectionName(refSec)
-
 	node.DateModified = page.DateModified
 
 	if unsafe, err = refSec.Html(); err != nil {

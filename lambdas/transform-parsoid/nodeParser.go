@@ -36,11 +36,10 @@ func getCitation(document *goquery.Document, cId, page string, section string, s
 	var unsafe string
 
 	citation := common.Citation{}
-
 	slct := document.Find(fmt.Sprintf("#%s", cId))
 
 	if len(slct.Nodes) <= 0 {
-		return citation, fmt.Errorf(fmt.Sprintf("No element was found with id=%s found", cId))
+		return citation, fmt.Errorf("No element was found with id=%s found", cId)
 	}
 
 	li := slct.Eq(0)
@@ -56,8 +55,13 @@ func getCitation(document *goquery.Document, cId, page string, section string, s
 
 	if isbn != "" && validate(isbn) {
 		citation.Source = getSourceId(isbn)
+		output, err := sourceParseEvent(snsClient, &common.SourseParseEvent{ID: isbn, Page: page, Section: section})
 
-		sourceParseEvent(snsClient, &common.SourseParseEvent{ID: isbn, Page: page, Section: section})
+		if err != nil {
+			return citation, fmt.Errorf("error sendig out SNS event: %s", err)
+		}
+
+		log.Debug("Successfully published SNS message: %s", *output.MessageId)
 	}
 
 	return citation, nil
@@ -104,7 +108,7 @@ func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page, sn
 			ct, err := getCitation(document, id, page.Name, node.Name, snsClient)
 
 			if err != nil {
-				fmt.Println(fmt.Sprintf("problem with creating citation: %s", err))
+				log.Error("problem with creating citation: %s", err)
 			}
 			nodeCites = append(nodeCites, ct)
 		}
@@ -127,7 +131,6 @@ func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page, sn
 		ct.IsPartOf = []string{node.ID}
 		node.Unsafe = unsafe
 		nodes = append(nodes, node)
-
 		cits = append(cits, ct)
 	}
 
