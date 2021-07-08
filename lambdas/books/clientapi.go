@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -66,25 +65,7 @@ func (c *Client) get(query string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *Client) GetWikitext(title string) (string, error) {
-	var body []byte
-	var err error
-
-	page := &WikiPage{}
-	query := fmt.Sprintf("/w/api.php?action=parse&format=json&page=%s&prop=wikitext&formatversion=2", title)
-
-	if body, err = c.get(query); err != nil {
-		return "", err
-	}
-
-	if err := json.Unmarshal(body, page); err != nil {
-		return "", err
-	}
-
-	return page.Parse.Wikitext, nil
-}
-
-func (c *Client) GetBook(isbn string) (*common.Book, error) {
+func (c *Client) GetBook(isbn string) (*Book, error) {
 	var body []byte
 	var err error
 
@@ -101,7 +82,7 @@ func (c *Client) GetBook(isbn string) (*common.Book, error) {
 
 	gbook := response.Items[0].Volumeinfo
 
-	book := &common.Book{
+	book := &Book{
 		Isbn:          isbn,
 		Name:          fmt.Sprintf("%s: %s", gbook.Title, gbook.Subtitle),
 		Author:        gbook.Authors,
@@ -111,26 +92,4 @@ func (c *Client) GetBook(isbn string) (*common.Book, error) {
 	}
 
 	return book, nil
-}
-
-func (c *Client) GetCitoidBook(isbn string) (*CitoidBook, error) {
-	var body []byte
-	var err error
-	cbook := &CitoidBooks{}
-
-	query := fmt.Sprintf("/api/rest_v1/data/citation/mediawiki/%s", isbn)
-	if body, err = c.get(query); err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	if err := json.Unmarshal(body, &cbook.Books); err != nil {
-		return nil, err
-	}
-
-	if len(cbook.Books) <= 0 {
-		return nil, errors.New("book not found")
-	}
-
-	return &cbook.Books[0], nil
 }

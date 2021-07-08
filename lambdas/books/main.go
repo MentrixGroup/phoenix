@@ -35,43 +35,6 @@ var (
 	log   *common.Logger
 )
 
-type CitoidBooks struct {
-	Books []CitoidBook
-}
-
-type CitoidBook struct {
-	Itemtype    string     `json:"itemType"`
-	Date        string     `json:"date"`
-	Publisher   string     `json:"publisher"`
-	Title       string     `json:"title"`
-	Isbn        []string   `json:"ISBN"`
-	Place       string     `json:"place"`
-	Numpages    string     `json:"numPages"`
-	Oclc        string     `json:"oclc"`
-	URL         string     `json:"url"`
-	Contributor [][]string `json:"contributor"`
-	Author      [][]string `json:"author"`
-	Accessdate  string     `json:"accessDate"`
-	Source      []string   `json:"source"`
-}
-
-type Book struct {
-	Isbn          string   `json:"isbn"`
-	Name          string   `json:"name"`
-	Author        []string `json:"author"`
-	Publisher     string   `json:"publisher"`
-	Datepublished string   `json:"datePublished"`
-	Thumbnailurl  string   `json:"thumbnailUrl"`
-}
-
-type WikiPage struct {
-	Parse struct {
-		Title    string `json:"title"`
-		Pageid   int    `json:"pageid"`
-		Wikitext string `json:"wikitext"`
-	} `json:"parse"`
-}
-
 const (
 	baseURL = "https://www.googleapis.com"
 )
