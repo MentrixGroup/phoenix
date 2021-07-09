@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-lambda-go/events"
@@ -34,6 +35,7 @@ var (
 	s3RawIncomeFolder         string
 	s3RawLinkedFolder         string
 	snsNodePublished          string
+	snsSourceParse            string
 
 	debug bool = false
 	log   *common.Logger
@@ -41,6 +43,10 @@ var (
 
 func keyf(msg *common.ChangeEvent) string {
 	return fmt.Sprintf("%s/%s/%s-%d", s3RawIncomeFolder, msg.ServerName, msg.Title, msg.Revision)
+}
+
+func replaceSpaces(str string) string {
+	return strings.ReplaceAll(str, " ", "_")
 }
 
 func readLinkedData(s3client *s3.S3, msg *common.ChangeEvent) (*common.Thing, error) {
@@ -66,6 +72,42 @@ func readLinkedData(s3client *s3.S3, msg *common.ChangeEvent) (*common.Thing, er
 	return thing, nil
 }
 
+func sendSnsEvent(snsClient *sns.SNS, topic string, data []byte) (*sns.PublishOutput, error) {
+	var err error
+	var input *sns.PublishInput
+	var output *sns.PublishOutput
+
+	input = &sns.PublishInput{
+		Message:  aws.String(string(data)),
+		TopicArn: aws.String(fmt.Sprintf("arn:aws:sns:%s:%s:%s", awsRegion, awsAccount, topic)),
+	}
+
+	// Publish to SNS
+	if output, err = snsClient.Publish(input); err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func sourceParseEvent(snsClient *sns.SNS, source *common.SourseParseEvent) (*sns.PublishOutput, error) {
+	var b []byte
+	var err error
+	var output *sns.PublishOutput
+
+	// JSON-encoded SNS message
+	if b, err = json.Marshal(source); err != nil {
+		return nil, err
+	}
+
+	// Publish to SNS
+	if output, err = sendSnsEvent(snsClient, snsSourceParse, b); err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 // A helper function that returns a PostPutNodeCallback function conditional on a env variable.
 func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 	var disabled = false
@@ -81,8 +123,6 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 		return func(node common.Node) error {
 			var b []byte
 			var err error
-			var input *sns.PublishInput
-			var output *sns.PublishOutput
 
 			// JSON-encoded SNS message
 			if b, err = json.Marshal(common.NodeStoredEvent{ID: node.ID}); err != nil {
@@ -90,18 +130,11 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 				return fmt.Errorf("Unable to marshal SNS event to JSON: %w", err)
 			}
 
-			input = &sns.PublishInput{
-				Message:  aws.String(string(b)),
-				TopicArn: aws.String(fmt.Sprintf("arn:aws:sns:%s:%s:%s", awsRegion, awsAccount, snsNodePublished)),
-			}
-
 			// Publish to SNS
-			if output, err = snsClient.Publish(input); err != nil {
-				log.Error("Failed to publish SNS event: %s", err)
-				return fmt.Errorf("Failed to publish SNS event: %w", err)
+			if err = sendSnsEvent(snsClient, snsNodePublished, b); err != nil {
+				log.Error("%s", err)
+				return fmt.Errorf("%w", err)
 			}
-
-			log.Debug("Successfully published SNS message: %s (%s stored)", *output.MessageId, node.ID)
 
 			return nil
 		}
@@ -156,7 +189,7 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 
 		log.Debug("Parsing html parsoid document...")
 
-		page, nodes, err := parseParsoidDocument(document)
+		page, nodes, nodeCits, citsEnhanced, citation, err := parseParsoidDocument(document, snsClient)
 
 		if err != nil {
 			log.Error("Unable to parse parsoid document (%+v) with error: %s (+%v)", msg, err)
@@ -174,9 +207,12 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 		log.Debug("Saving document in canonical format...")
 
 		saveError := repo.Apply(&storage.Update{
-			Page:   *page,
-			Nodes:  nodes,
-			Abouts: map[string]common.Thing{"//schema.org": *thing},
+			Page:             *page,
+			Citation:         *citation,
+			CitationEnhanced: *citsEnhanced,
+			Nodes:            nodes,
+			NodesCitations:   nodeCits,
+			Abouts:           map[string]common.Thing{"//schema.org": *thing},
 
 			// Send events for each node published
 			PostPutNodeCallback: postPutNodeCallback(snsClient),

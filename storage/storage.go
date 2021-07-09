@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash"
 	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -197,75 +198,124 @@ func (r *Repository) GetTopics(node *common.Node) ([]common.RelatedTopic, error)
 	return topics, nil
 }
 
-// PutPage stores a Page. This method generates a unique ID and returns it on success; NOTE: If
-// you assign an ID it will be overwritten.
-func (r *Repository) PutPage(page *common.Page) (string, error) {
+// PutPage stores a Page.
+func (r *Repository) PutPage(page *common.Page) error {
 	var data []byte
 	var err error
 
 	if err = validatePage(page); err != nil {
-		return "", err
+		return err
 	}
 
-	page.ID = pagef(makePageID(page))
-
 	if data, err = encodeJSON(page); err != nil {
-		return "", err
+		return err
 	}
 
 	metadata := map[string]*string{"type": aws.String("common.Page")}
 
 	if err = r.put(page.ID, data, metadata); err != nil {
-		return "", err
+		return err
 	}
 
-	return page.ID, nil
+	return nil
 }
 
-// PutNode stores a Node.  This method generates a unique ID and returns it on success; NOTE: If
-// you assign an ID it will be overwritten.
-func (r *Repository) PutNode(node *common.Node) (string, error) {
+// PutNode stores a Node.
+func (r *Repository) PutNode(node *common.Node) error {
 	var data []byte
 	var err error
 
 	if err = validateNode(node); err != nil {
-		return "", err
+		return err
 	}
 
-	node.ID = nodef(makeNodeID(node))
-
 	if data, err = encodeJSON(node); err != nil {
-		return "", err
+		return err
 	}
 
 	metadata := map[string]*string{"type": aws.String("common.Node")}
 
 	if err = r.put(node.ID, data, metadata); err != nil {
-		return "", err
+		return err
 	}
 
-	return node.ID, nil
+	return nil
+}
+
+// PutNode stores a Node Citations.
+func (r *Repository) PutNodeCitations(citation *common.Citation) error {
+	var data []byte
+	var err error
+
+	if data, err = encodeJSON(citation); err != nil {
+		return err
+	}
+
+	metadata := map[string]*string{"type": aws.String("common.Citations")}
+
+	if err = r.put(citation.ID, data, metadata); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// PutPageCitation stores a Page Citation.
+func (r *Repository) PutPageCitation(node *common.Node) error {
+	var data []byte
+	var err error
+
+	if err = validateNode(node); err != nil {
+		return err
+	}
+
+	if data, err = encodeJSON(node); err != nil {
+		return err
+	}
+
+	metadata := map[string]*string{"type": aws.String("common.Node")}
+
+	if err = r.put(node.ID, data, metadata); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) PutPageCitationEnhanced(citation *common.Citations) error {
+	var data []byte
+	var err error
+
+	if data, err = encodeJSON(citation); err != nil {
+		return err
+	}
+
+	metadata := map[string]*string{"type": aws.String("common.Citations")}
+
+	if err = r.put(citation.ID, data, metadata); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // PutAbout stores a Thing.  This method generates a unique ID and returns it on success; NOTE: If
 // you assign an ID it will be overwritten.
-func (r *Repository) PutAbout(thing *common.Thing) (string, error) {
+func (r *Repository) PutAbout(thing *common.Thing) error {
 	var data []byte
 	var err error
 
-	thing.ID = aboutf(makeRandomID())
-
 	if data, err = encodeJSON(thing); err != nil {
-		return "", err
+		return err
 	}
 
 	metadata := map[string]*string{"type": aws.String("common.Thing")}
 
 	if err = r.put(thing.ID, data, metadata); err != nil {
-		return "", err
+		return err
 	}
 
-	return thing.ID, nil
+	return nil
 }
 
 // PutTopics stores an array of RelatedTopic objects associated with a Node
@@ -300,15 +350,16 @@ func (r *Repository) DeleteAbout(id string) {
 // Update encapsulates the parts of a document involved in an update of the content repository.
 type Update struct {
 	Page                common.Page
+	Citation            common.Node
+	CitationEnhanced    common.Citations
 	Nodes               []common.Node
+	NodesCitations      []common.Citations
 	Abouts              map[string]common.Thing
 	PostPutNodeCallback func(common.Node) error
 }
 
 // Apply updates a document in the content repository.
 func (r *Repository) Apply(update *Update) error {
-	var prePID, postPID string
-	var prevPage *common.Page
 	var err error
 
 	// Baby steps: An argument could be made for breaking down the steps here into events that
@@ -317,33 +368,22 @@ func (r *Repository) Apply(update *Update) error {
 	// uploads of Node & Things, for example), but we're not going there yet either.
 
 	validateSource(&update.Page.Source)
-	prePID = pagef(makePageID(&update.Page))
-
-	if prevPage, err = r.GetPage(prePID); err != nil {
-		// Continue for ErrNotFound (first write?), return errors of any other type.
-		var nerr *ErrNotFound
-		if !errors.As(err, &nerr) {
-			return err
-		}
-	}
 
 	update.Page.HasPart = make([]string, 0)
 
 	// Upload node objects.  Remember: the ordering of HasPart matters (keep this in mind
 	// when/if adding concurrency at a later date).
 	for i, node := range update.Nodes {
-		var id string
 		var err error
 
-		node.IsPartOf = []string{prePID}
+		node.IsPartOf = []string{fmt.Sprintf("%s.json", update.Page.ID)}
 		node.Source = update.Page.Source
 
-		if id, err = r.PutNode(&node); err != nil {
+		if err = r.PutNode(&node); err != nil {
 			return fmt.Errorf("error storing node: %w", err)
 		}
 
-		update.Nodes[i].ID = id
-		update.Page.HasPart = append(update.Page.HasPart, id)
+		update.Page.HasPart = append(update.Page.HasPart, fmt.Sprintf("%s.json", update.Nodes[i].ID))
 
 		if update.PostPutNodeCallback != nil {
 			// FIXME: Should we handle the error?  Ignore it?
@@ -355,29 +395,37 @@ func (r *Repository) Apply(update *Update) error {
 
 	// Upload linked data objects.
 	for k, v := range update.Abouts {
-		var id string
 		var err error
-		if id, err = r.PutAbout(&v); err != nil {
+		v.ID = fmt.Sprintf("pages/%s/%s_about_%s", strings.ReplaceAll(update.Page.Name, " ", "_"), k)
+
+		if err = r.PutAbout(&v); err != nil {
 			return fmt.Errorf("error storing linked data object: %w", err)
 		}
-		update.Page.About[k] = id
+
+		update.Page.About[k] = v.ID
 	}
 
-	// Overwrite the Page object
-	if postPID, err = r.PutPage(&update.Page); err != nil {
+	for _, citation := range update.NodesCitations {
+		var err error
+
+		if err = r.PutNode(&citation); err != nil {
+			return fmt.Errorf("error storing node: %w", err)
+		}
+	}
+
+	// Put page citation
+	if err = r.PutPageCitation(&update.Citation); err != nil {
 		return err
 	}
 
-	// This should NEVER happen (so it probably will).
-	if postPID != prePID {
-		return fmt.Errorf("committed Page ID does not match precalculated value: %s != %s", postPID, prePID)
+	// Put page citations enhanced
+	if err = r.PutPageCitationEnhanced(&update.CitationEnhanced); err != nil {
+		return err
 	}
 
-	// Delete previous linked-data objects (if any)
-	if prevPage != nil {
-		for _, id := range prevPage.About {
-			r.DeleteAbout(id)
-		}
+	// Overwrite the Page object
+	if err = r.PutPage(&update.Page); err != nil {
+		return err
 	}
 
 	// Perform indexing
