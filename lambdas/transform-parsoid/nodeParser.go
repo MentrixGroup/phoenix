@@ -67,22 +67,20 @@ func getCitation(document *goquery.Document, cId, page string, section string, s
 	return citation, nil
 }
 
-func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page, snsClient *sns.SNS) ([]common.Node, []common.Citations, error) {
+func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page, snsClient *sns.SNS) ([]common.Section, []common.Citations, error) {
 	var err error
 	var modified = page.DateModified
 	var nameCounts = make(map[string]int)
-	var nodes = make([]common.Node, 0)
+	var nodes = make([]common.Section, 0)
 	var sections = document.Find("html>body>section[data-mw-section-id]")
 	var cits = make([]common.Citations, 0)
 
 	for i := range sections.Nodes {
-		var node = common.Node{}
+		var node = common.Section{}
 		var ct = common.Citations{}
 		var section = sections.Eq(i)
 		var unsafe string
 		var nodeCites = make([]common.Citation, 0)
-
-		node.Source = page.Source
 
 		// If this is the first section and the name is a zero length string, then we assign it
 		// a constant to simplify lookups
@@ -116,20 +114,21 @@ func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page, sn
 		ct.Citations = nodeCites
 
 		node.DateModified = modified
+		node.Version = page.Version
 		unqn := fmt.Sprintf("%s_%s", replaceSpaces(page.Name), replaceSpaces(node.Name))
-		node.HasPart = []string{fmt.Sprintf("sections/%s/%s_citations.json", unqn, unqn)}
+		node.HasPart = []common.Entity{common.Entity{Identifier: fmt.Sprintf("sections/%s/%s_citations.json", unqn, unqn)}}
 
 		if val, ok := ignoredNodes[node.Name]; ok && val {
 			continue
 		}
 
 		if unsafe, err = section.Html(); err != nil {
-			return []common.Node{}, []common.Citations{}, err
+			return []common.Section{}, []common.Citations{}, err
 		}
 
 		node.ID = fmt.Sprintf("sections/%s/%s", unqn, unqn)
-		ct.IsPartOf = []string{node.ID}
-		node.Unsafe = unsafe
+		ct.IsPartOf = []common.Entity{common.Entity{Identifier: node.ID}}
+		node.Text = unsafe
 		nodes = append(nodes, node)
 		cits = append(cits, ct)
 	}

@@ -109,7 +109,7 @@ func sourceParseEvent(snsClient *sns.SNS, source *common.SourseParseEvent) (*sns
 }
 
 // A helper function that returns a PostPutNodeCallback function conditional on a env variable.
-func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
+func postPutNodeCallback(snsClient *sns.SNS) func(node common.Section) error {
 	var disabled = false
 
 	if env, ok := os.LookupEnv("DISABLE_PUT_NODE_CALLBACK"); ok {
@@ -120,7 +120,7 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 
 	// If not disabled (read: if enabled), return a callback that will deliver a "node published" SNS message.
 	if !disabled {
-		return func(node common.Node) error {
+		return func(node common.Section) error {
 			var b []byte
 			var err error
 
@@ -141,7 +141,7 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 	}
 
 	// If disabled, return a no-op callback.
-	return func(node common.Node) error {
+	return func(node common.Section) error {
 		return nil
 	}
 }

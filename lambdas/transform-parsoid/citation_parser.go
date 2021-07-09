@@ -30,10 +30,10 @@ func getRefs(li *goquery.Selection, page string) []string {
 }
 
 // Add citations here when data structure would be ready
-func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page) (*common.Citations, *common.Node, error) {
+func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page) (*common.Citations, *common.Section, error) {
 	var err error
 	var unsafe string
-	var node = &common.Node{}
+	var node = &common.Section{}
 
 	citations := &common.Citations{}
 	references := document.Find(slct)
@@ -73,9 +73,9 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 		return citations, nil, err
 	}
 
-	citations.IsPartOf = []string{page.ID}
+	citations.IsPartOf = []common.Entity{common.Entity{Identifier: page.ID}}
 	node.ID = fmt.Sprintf("pages/%s/%s_citations", replaceSpaces(page.Name), replaceSpaces(page.Name))
-	node.Unsafe = unsafe
+	node.Text = unsafe
 
 	return citations, node, nil
 }
