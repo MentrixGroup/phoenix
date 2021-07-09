@@ -220,8 +220,27 @@ func (r *Repository) PutPage(page *common.Page) error {
 	return nil
 }
 
+// PutBook stores Books as a source.
+func (r *Repository) PutBook(page *common.Book) error {
+	var data []byte
+	var err error
+
+	if data, err = encodeJSON(page); err != nil {
+		return err
+	}
+
+	metadata := map[string]*string{"type": aws.String("common.Book")}
+
+	if err = r.put(fmt.Sprintf("books/%s", Book.Isbn), data, metadata); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // PutNode stores a Node.
-func (r *Repository) PutNode(node *common.Node) error {
+func (r *Repository) PutNode(node *common.Node) (string, error) {
+
 	var data []byte
 	var err error
 

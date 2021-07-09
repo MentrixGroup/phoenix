@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -20,6 +19,26 @@ func NewClient(baseURL string) *Client {
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
+}
+
+type GoogleBook struct {
+	Volumeinfo struct {
+		Title         string   `json:"title"`
+		Subtitle      string   `json:"subtitle"`
+		Authors       []string `json:"authors"`
+		Publisher     string   `json:"publisher"`
+		Publisheddate string   `json:"publishedDate"`
+		Imagelinks    struct {
+			Smallthumbnail string `json:"smallThumbnail"`
+			Thumbnail      string `json:"thumbnail"`
+		} `json:"imageLinks"`
+	} `json:"volumeInfo"`
+}
+
+type GoogleBooksResponse struct {
+	Kind       string       `json:"kind"`
+	Totalitems int          `json:"totalItems"`
+	Items      []GoogleBook `json:"items"`
 }
 
 func (c *Client) get(query string) ([]byte, error) {
@@ -46,42 +65,31 @@ func (c *Client) get(query string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *Client) GetWikitext(title string) (string, error) {
+func (c *Client) GetBook(isbn string) (*Book, error) {
 	var body []byte
 	var err error
 
-	page := &WikiPage{}
-	query := fmt.Sprintf("/w/api.php?action=parse&format=json&page=%s&prop=wikitext&formatversion=2", title)
+	response := &GoogleBooksResponse{}
+	query := fmt.Sprintf("/books/v1/volumes?q=isbn:%s", isbn)
 
 	if body, err = c.get(query); err != nil {
-		return "", err
-	}
-
-	if err := json.Unmarshal(body, page); err != nil {
-		return "", err
-	}
-
-	return page.Parse.Wikitext, nil
-}
-
-func (c *Client) GetCitoidBook(isbn string) (*CitoidBook, error) {
-	var body []byte
-	var err error
-	cbook := &CitoidBooks{}
-
-	query := fmt.Sprintf("/api/rest_v1/data/citation/mediawiki/%s", isbn)
-	if body, err = c.get(query); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
-	if err := json.Unmarshal(body, &cbook.Books); err != nil {
+	if err := json.Unmarshal(body, response); err != nil {
 		return nil, err
 	}
 
-	if len(cbook.Books) <= 0 {
-		return nil, errors.New("book not found")
+	gbook := response.Items[0].Volumeinfo
+
+	book := &Book{
+		Isbn:          isbn,
+		Name:          fmt.Sprintf("%s: %s", gbook.Title, gbook.Subtitle),
+		Author:        gbook.Authors,
+		Publisher:     gbook.Publisher,
+		Datepublished: gbook.Publisheddate,
+		Thumbnailurl:  gbook.Imagelinks.Thumbnail,
 	}
 
-	return &cbook.Books[0], nil
+	return book, nil
 }
