@@ -136,7 +136,7 @@ func (r *RootResolver) Node(args struct {
 	ID   *string
 	Name *NodeNameInput
 }) (*NodeResolver, error) {
-	var node *common.Node
+	var node *common.Section
 	var err error
 
 	if args.Name != nil {
@@ -178,7 +178,7 @@ func (r *RootResolver) Nodes(args struct{ Keyword *string }) ([]*NodeResolver, e
 		return nil, fmt.Errorf("Topic search failed: %w", err)
 	}
 
-	var node *common.Node
+	var node *common.Section
 
 	for _, nid := range nodes {
 		r.Logger.Info("Found node %s", nid)
@@ -230,7 +230,7 @@ func (r *PageResolver) HasPart(args struct {
 	Offset *int32
 }) ([]*NodeResolver, error) {
 	var err error
-	var node *common.Node
+	var node *common.Section
 	var offset int32 = 0
 	var resolvers = make([]*NodeResolver, 0)
 
@@ -246,11 +246,11 @@ func (r *PageResolver) HasPart(args struct {
 	}
 
 	// TODO: This is slow; Consider adding concurrency
-	for i, id := range r.p.HasPart[offset:] {
+	for i, entity := range r.p.HasPart[offset:] {
 		if args.Limit != nil && (int32(i)+1) > *args.Limit {
 			break
 		}
-		if node, err = r.repo.GetNode(id); err != nil {
+		if node, err = r.repo.GetNode(entity.ID); err != nil {
 			// If this was an error returned by S3 (it is an awserr.Error) and its code is s3.ErrCodeNoSuchKey
 			// then the object was simply not found (read: this is not an error per say).
 			if isS3NotFound(err) {
@@ -301,7 +301,7 @@ func (r *TupleResolver) Val() string {
 
 // NodeResolver resolves a GraphQL node type
 type NodeResolver struct {
-	n       *common.Node
+	n       *common.Section
 	repo    *storage.Repository
 	recurse uint32
 }
@@ -330,8 +330,8 @@ func (r *NodeResolver) IsPartOf() ([]*PageResolver, error) {
 	}
 
 	// TODO: This is slow; Consider adding concurrency
-	for _, id := range r.n.IsPartOf {
-		if page, err = r.repo.GetPage(id); err != nil {
+	for _, entity := range r.n.IsPartOf {
+		if page, err = r.repo.GetPage(entity.ID); err != nil {
 			// If this was an error returned by S3 (it is an awserr.Error) and its code is s3.ErrCodeNoSuchKey
 			// then the object was simply not found (read: this is not an error per say).
 			if isS3NotFound(err) {
