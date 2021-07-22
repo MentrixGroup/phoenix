@@ -9,12 +9,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
 	"github.com/spaolacci/murmur3"
-	"github.com/wikimedia/phoenix/common"
 )
 
 // ErrNotFound indicates that a requested resource does not exist in storage

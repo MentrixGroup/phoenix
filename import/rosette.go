@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlisterIgnatius/phoenix/common"
+	"github.com/AlisterIgnatius/phoenix/rosette"
+	"github.com/AlisterIgnatius/phoenix/storage"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/wikimedia/phoenix/common"
-	"github.com/wikimedia/phoenix/rosette"
-	"github.com/wikimedia/phoenix/storage"
 )
 
 var (

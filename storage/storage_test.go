@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -23,7 +24,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wikimedia/phoenix/common"
 )
 
 // Test objects

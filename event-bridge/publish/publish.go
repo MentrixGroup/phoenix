@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wikimedia/phoenix/common"
+	"github.com/AlisterIgnatius/phoenix/common"
 )
 
 var (

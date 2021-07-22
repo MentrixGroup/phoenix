@@ -1,4 +1,4 @@
-module github.com/wikimedia/phoenix/storage
+module github.com/AlisterIgnatius/phoenix/storage
 
 go 1.14
 
@@ -10,7 +10,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stretchr/testify v1.6.1
-	github.com/wikimedia/phoenix/common v0.0.0-20201207205910-f0d114bb14a4
+	github.com/AlisterIgnatius/phoenix/common v0.0.0-20201207205910-f0d114bb14a4
 	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
 	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect

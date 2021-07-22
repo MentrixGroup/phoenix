@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlisterIgnatius/phoenix/common"
+	"github.com/AlisterIgnatius/phoenix/storage"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -17,8 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/wikimedia/phoenix/common"
-	"github.com/wikimedia/phoenix/storage"
 )
 
 // Name to assign (unnamed) lead/intro sections.
