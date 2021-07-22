@@ -136,3 +136,13 @@ type Citations struct {
 	Citations []Citation `json:"citations"`
 	IsPartOf  []Entity   `json:"is_part_of"`
 }
+
+// Book book source
+type Book struct {
+	Isbn          string
+	Name          string
+	Author        []string
+	Publisher     string
+	Datepublished string
+	Thumbnailurl  string
+}
