@@ -6,11 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 )
 
-func parseParsoidDocument(document *goquery.Document, snsClient *sns.SNS) (*common.Page, []common.Node, []common.Citations, *common.Citations, *common.Node, error) {
+func parseParsoidDocument(document *goquery.Document, snsClient *sns.SNS) (*common.Page, []common.Section, []common.Citations, *common.Citations, *common.Section, error) {
 	var err error
 	var page *common.Page
-	var nodes []common.Node
-	var ref *common.Node
+	var nodes []common.Section
+	var ref *common.Section
 	var cts []common.Citations
 	var citations *common.Citations
 

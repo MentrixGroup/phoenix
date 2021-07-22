@@ -97,8 +97,9 @@ func parseParsoidDocumentPage(document *goquery.Document) (*common.Page, error) 
 	var pageURL *url.URL
 	var err error
 
-	page.HasPart = make([]string, 0)
-	page.Source = common.Source{}
+	page.HasPart = make([]common.Entity, 0)
+	page.License = common.NewLicense()
+	page.InLanguage = common.GetEnLang()
 
 	head = document.Find("html>head")
 
@@ -116,23 +117,17 @@ func parseParsoidDocumentPage(document *goquery.Document) (*common.Page, error) 
 		return nil, err
 	}
 
-	if page.Source.ID, err = getPageSourceId(head); err != nil {
-		return nil, err
-	}
-
-	if page.Source.TimeUUID, err = getPageSourceTimeUuid(head); err != nil {
+	if page.ID, err = getPageSourceId(head); err != nil {
 		return nil, err
 	}
 
 	html = document.Find("html")
 
-	if page.Source.Revision, err = getPageSourceRevision(html); err != nil {
+	if page.Version, err = getPageSourceRevision(html); err != nil {
 		return nil, err
 	}
 
 	page.Source.Authority = pageURL.Hostname()
-
-	page.ID = fmt.Sprintf("pages/%s/%s", replaceSpaces(page.Name), replaceSpaces(page.Name))
 
 	return page, nil
 }

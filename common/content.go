@@ -50,17 +50,18 @@ type Section struct {
 
 // Page represents the root node of a document graph
 type Page struct {
-	Name         string    `json:"name"`
-	Identifier   int       `json:"identifier"`
-	URL          string    `json:"url"`
-	InLanguage   Language  `json:"in_language"`
-	IsPartOf     []Project `json:"is_part_of"`
-	Version      int       `json:"version"`
-	DateModified time.Time `json:"date_modified"`
-	License      []License `json:"license"`
-	MainEntity   Entity    `json:"main_entity"`
-	Keywords     string    `json:"keywords"`
-	HasPart      []Entity  `json:"has_part"`
+	Name         string            `json:"name"`
+	Identifier   int               `json:"identifier"`
+	URL          string            `json:"url"`
+	InLanguage   Language          `json:"in_language"`
+	IsPartOf     []Project         `json:"is_part_of"`
+	Version      int               `json:"version"`
+	DateModified time.Time         `json:"date_modified"`
+	License      []License         `json:"license"`
+	MainEntity   Entity            `json:"main_entity"`
+	About        map[string]string `json:"about"`
+	Keywords     string            `json:"keywords"`
+	HasPart      []Entity          `json:"has_part"`
 }
 
 // Source represents information on the source of the document.
@@ -99,6 +100,15 @@ func NewThing() *Thing {
 	return &Thing{metadata: metadata{Context: "https://schema.org", Type: "Thing"}}
 }
 
+//GetEnLang returns en Language model
+func GetEnLang() *Language {
+	return &Language{
+		Name:       "English",
+		Identifier: "en",
+		Direction:  "ltr",
+	}
+}
+
 func NewLicense() *License {
 	return &License{
 		Identifier: "CC-BY-SA-3.0",
@@ -124,5 +134,5 @@ type Citation struct {
 // Citations citations collection
 type Citations struct {
 	Citations []Citation `json:"citations"`
-	IsPartOf  []string   `json:"is_part_of"`
+	IsPartOf  []Entity   `json:"is_part_of"`
 }

@@ -127,10 +127,10 @@ func (r *Repository) GetPageByName(authority, name string) (*common.Page, error)
 }
 
 // GetNode returns a Node by its ID
-func (r *Repository) GetNode(id string) (*common.Node, error) {
+func (r *Repository) GetNode(id string) (*common.Section, error) {
 	var data *json.Decoder
 	var err error
-	var section common.Node
+	var section common.Section
 
 	// Fetch
 	if data, err = r.get(id); err != nil {
@@ -146,7 +146,7 @@ func (r *Repository) GetNode(id string) (*common.Node, error) {
 }
 
 // GetNodeByName returns a Node by its authority, a page name, and the node name
-func (r *Repository) GetNodeByName(authority, pageName, name string) (*common.Node, error) {
+func (r *Repository) GetNodeByName(authority, pageName, name string) (*common.Section, error) {
 	var id string
 	var err error
 
@@ -180,13 +180,13 @@ func (r *Repository) GetAbout(id string) (*common.Thing, error) {
 }
 
 // GetTopics returns an array of RelatedTopics associated with a Node
-func (r *Repository) GetTopics(node *common.Node) ([]common.RelatedTopic, error) {
+func (r *Repository) GetTopics(node *common.Section) ([]common.RelatedTopic, error) {
 	var data *json.Decoder
 	var err error
 	var topics []common.RelatedTopic
 
 	// Fetch
-	if data, err = r.get(topicsf(makeNodeID(node))); err != nil {
+	if data, err = r.get(topicsf(node.ID)); err != nil {
 		return nil, fmt.Errorf("Unable to retrieve related topics for %s: %w", node.ID, err)
 	}
 
@@ -221,17 +221,17 @@ func (r *Repository) PutPage(page *common.Page) error {
 }
 
 // PutBook stores Books as a source.
-func (r *Repository) PutBook(page *common.Book) error {
+func (r *Repository) PutBook(book *common.Book) error {
 	var data []byte
 	var err error
 
-	if data, err = encodeJSON(page); err != nil {
+	if data, err = encodeJSON(book); err != nil {
 		return err
 	}
 
 	metadata := map[string]*string{"type": aws.String("common.Book")}
 
-	if err = r.put(fmt.Sprintf("books/%s", Book.Isbn), data, metadata); err != nil {
+	if err = r.put(fmt.Sprintf("books/%s", book.Isbn), data, metadata); err != nil {
 		return err
 	}
 
@@ -239,26 +239,26 @@ func (r *Repository) PutBook(page *common.Book) error {
 }
 
 // PutNode stores a Node.
-func (r *Repository) PutNode(node *common.Node) (string, error) {
+func (r *Repository) PutNode(section *common.Section) (string, error) {
 
 	var data []byte
 	var err error
 
-	if err = validateNode(node); err != nil {
-		return err
+	if err = validateNode(section); err != nil {
+		return "", err
 	}
 
-	if data, err = encodeJSON(node); err != nil {
-		return err
+	if data, err = encodeJSON(section); err != nil {
+		return "", err
 	}
 
-	metadata := map[string]*string{"type": aws.String("common.Node")}
+	metadata := map[string]*string{"type": aws.String("common.Section")}
 
-	if err = r.put(node.ID, data, metadata); err != nil {
-		return err
+	if err = r.put(section.ID, data, metadata); err != nil {
+		return "", err
 	}
 
-	return nil
+	return section.ID, nil
 }
 
 // PutNode stores a Node Citations.
@@ -280,7 +280,7 @@ func (r *Repository) PutNodeCitations(citation *common.Citation) error {
 }
 
 // PutPageCitation stores a Page Citation.
-func (r *Repository) PutPageCitation(node *common.Node) error {
+func (r *Repository) PutPageCitation(node *common.Section) error {
 	var data []byte
 	var err error
 
@@ -292,7 +292,7 @@ func (r *Repository) PutPageCitation(node *common.Node) error {
 		return err
 	}
 
-	metadata := map[string]*string{"type": aws.String("common.Node")}
+	metadata := map[string]*string{"type": aws.String("common.Section")}
 
 	if err = r.put(node.ID, data, metadata); err != nil {
 		return err
@@ -338,10 +338,10 @@ func (r *Repository) PutAbout(thing *common.Thing) error {
 }
 
 // PutTopics stores an array of RelatedTopic objects associated with a Node
-func (r *Repository) PutTopics(node *common.Node, topics []common.RelatedTopic) error {
+func (r *Repository) PutTopics(node *common.Section, topics []common.RelatedTopic) error {
 	var data []byte
 	var err error
-	var id = topicsf(makeNodeID(node))
+	var id = topicsf(node.ID)
 	var metadata = map[string]*string{"type": aws.String("[]common.RelatedTopic")}
 
 	if data, err = encodeJSON(topics); err != nil {
@@ -369,12 +369,16 @@ func (r *Repository) DeleteAbout(id string) {
 // Update encapsulates the parts of a document involved in an update of the content repository.
 type Update struct {
 	Page                common.Page
-	Citation            common.Node
+	Citation            common.Section
 	CitationEnhanced    common.Citations
-	Nodes               []common.Node
+	Nodes               []common.Section
 	NodesCitations      []common.Citations
 	Abouts              map[string]common.Thing
-	PostPutNodeCallback func(common.Node) error
+	PostPutNodeCallback func(common.Section) error
+}
+
+func replaceSpaces(str string) string {
+	return strings.ReplaceAll(str, " ", "_")
 }
 
 // Apply updates a document in the content repository.
@@ -386,23 +390,20 @@ func (r *Repository) Apply(update *Update) error {
 	// also be made for handling some of these steps concurrently (we could easily parallelize
 	// uploads of Node & Things, for example), but we're not going there yet either.
 
-	validateSource(&update.Page.Source)
-
-	update.Page.HasPart = make([]string, 0)
+	update.Page.HasPart = make([]common.Entity, 0)
 
 	// Upload node objects.  Remember: the ordering of HasPart matters (keep this in mind
 	// when/if adding concurrency at a later date).
 	for i, node := range update.Nodes {
 		var err error
 
-		node.IsPartOf = []string{fmt.Sprintf("%s.json", update.Page.ID)}
-		node.Source = update.Page.Source
+		node.IsPartOf = []Entity{&Entity{Identifier: fmt.Sprintf("%s.json", replaceSpaces(update.Page.Name))}}
 
 		if err = r.PutNode(&node); err != nil {
 			return fmt.Errorf("error storing node: %w", err)
 		}
 
-		update.Page.HasPart = append(update.Page.HasPart, fmt.Sprintf("%s.json", update.Nodes[i].ID))
+		update.Page.HasPart = append(update.Page.HasPart, &Entity{Identifier: fmt.Sprintf("%s.json", update.Nodes[i].ID)})
 
 		if update.PostPutNodeCallback != nil {
 			// FIXME: Should we handle the error?  Ignore it?
@@ -410,9 +411,10 @@ func (r *Repository) Apply(update *Update) error {
 		}
 	}
 
+	TO DO: add this to new model?
 	update.Page.About = make(map[string]string)
 
-	// Upload linked data objects.
+	Upload linked data objects.
 	for k, v := range update.Abouts {
 		var err error
 		v.ID = fmt.Sprintf("pages/%s/%s_about_%s", strings.ReplaceAll(update.Page.Name, " ", "_"), k)
@@ -475,7 +477,7 @@ func encodeJSON(v interface{}) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
-func validateSource(source *common.Source) error {
+func validateSource(source *common.Section) error {
 	if source.ID <= 0 {
 		return fmt.Errorf("uninitialized common.Source.ID attribute (+%v)", source)
 	}
@@ -504,14 +506,23 @@ func validatePage(page *common.Page) error {
 	if len(page.HasPart) < 1 {
 		return fmt.Errorf("zero-length page.HasPart attribute (%+v)", page)
 	}
-	return validateSource(&page.Source)
+	return nil
 }
 
-func validateNode(node *common.Node) error {
-	if node.DateModified.IsZero() {
-		return fmt.Errorf("uninitialized node.DateModified attribute (%+v)", node)
+func validateNode(section *common.Section) error {
+	if section.DateModified.IsZero() {
+		return fmt.Errorf("uninitialized node.DateModified attribute (%+v)", section)
 	}
-	return validateSource(&node.Source)
+
+	if section.ID == "" {
+		return fmt.Errorf("uninitialized common.Section.ID attribute (+%v)", section)
+	}
+
+	if section.Version <= 0 {
+		return fmt.Errorf("uninitialized common.Section.Version attribute (+%v)", section)
+	}
+
+	return nil
 }
 
 func makeRandomID() string {
@@ -536,7 +547,7 @@ func makePageID(page *common.Page) string {
 
 // To maintain node ID stability, we create a globally unique (and opaque) ID from a hash of
 // the underlying wiki, page ID, and node name.
-func makeNodeID(node *common.Node) string {
+func makeNodeID(node *common.Section) string {
 	hasher := newHash64()
 	hasher.Write([]byte(fmt.Sprintf("%s-%d-%s", node.Source.Authority, node.Source.ID, node.Name)))
 	return asHex(hasher.Sum64())

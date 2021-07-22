@@ -37,7 +37,7 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 	for _, record := range event.Records {
 		var err error
 		var msg = &common.NodeStoredEvent{}
-		var node *common.Node
+		var node *common.Section
 		var topics []common.RelatedTopic
 
 		// Deserialize message
@@ -54,7 +54,7 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 			continue
 		}
 
-		log.Debug("Processing Node.Unsafe='%.24s...'", node.Unsafe)
+		log.Debug("Processing Node.Unsafe='%.24s...'", node.Text)
 
 		// Fetch related-topics
 		if topics, err = recommendService.Topics(node); err != nil {
