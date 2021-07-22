@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/AlisterIgnatius/phoenix/common"
-	"github.com/AlisterIgnatius/phoenix/rosette"
-	"github.com/AlisterIgnatius/phoenix/storage"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/wikimedia/phoenix/common"
+	"github.com/wikimedia/phoenix/rosette"
+	"github.com/wikimedia/phoenix/storage"
 )
 
 var (
@@ -37,7 +37,7 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 	for _, record := range event.Records {
 		var err error
 		var msg = &common.NodeStoredEvent{}
-		var node *common.Section
+		var node *common.Node
 		var topics []common.RelatedTopic
 
 		// Deserialize message
@@ -54,7 +54,7 @@ func handleRequest(ctx context.Context, event events.SNSEvent) {
 			continue
 		}
 
-		log.Debug("Processing Node.Unsafe='%.24s...'", node.Text)
+		log.Debug("Processing Node.Unsafe='%.24s...'", node.Unsafe)
 
 		// Fetch related-topics
 		if topics, err = recommendService.Topics(node); err != nil {

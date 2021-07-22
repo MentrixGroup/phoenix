@@ -4,64 +4,31 @@ import (
 	"time"
 )
 
-//Language represents human language
-type Language struct {
-	Name       string `json:"name"`
-	Identifier string `json:"identifier"`
-	Direction  string `json:"direction"`
-}
-
-//Project represents single language wiki
-type Project struct {
-	Name       string   `json:"name"`
-	Identifier string   `json:"identifier"`
-	InLanguage Language `json:"in_language"`
-	URL        string   `json:"url"`
-	Size       struct {
-		Value    int    `json:"value"`
-		UnitText string `json:"unit_text"`
-	} `json:"size"`
-}
-
-//License represents a content Licence
-type License struct {
-	Identifier string `json:"identifier"`
-	Name       string `json:"name"`
-	URL        string `json:"url"`
-}
-
-//Entity represents a subject of a page
-type Entity struct {
-	Identifier string `json:"identifier"`
-}
-
-//Section represents a section of the page
-
-type Section struct {
-	Name           string    `json:"name"`
-	Identifier     string    `json:"identifier"`
-	Version        int       `json:"version"`
-	IsPartOf       []Entity  `json:"is_part_of"`
-	Text           string    `json:"text"`
-	EncodingFormat string    `json:"encoding_format"`
-	License        []License `json:"license"`
-	Citation       []string  `json:"citation"`
-}
-
 // Page represents the root node of a document graph
 type Page struct {
-	Name         string            `json:"name"`
-	Identifier   int               `json:"identifier"`
-	URL          string            `json:"url"`
-	InLanguage   Language          `json:"in_language"`
-	IsPartOf     []Project         `json:"is_part_of"`
-	Version      int               `json:"version"`
-	DateModified time.Time         `json:"date_modified"`
-	License      []License         `json:"license"`
-	MainEntity   Entity            `json:"main_entity"`
-	About        map[string]string `json:"about"`
-	Keywords     string            `json:"keywords"`
-	HasPart      []Entity          `json:"has_part"`
+	// Globally unique identifier
+	ID string `json:"identifier"`
+
+	// Source (MediaWiki) metadata for this page
+	Source Source `json:"_source"`
+
+	// The Page name (corresponds with schema.org/Thing#name)
+	Name string `json:"name"`
+
+	// The Page url (corresponds with schema.org/Thing#url)
+	URL string `json:"url"`
+
+	// Date and time of last modification (corresponds with schema.org/CreativeWork#dateModified)
+	DateModified time.Time `json:"dateModified"`
+
+	// URLs of content which are a part of this one.  Loosely corresponds with schema.org/CreativeWork#hasPart,
+	// but unlike its namesake, this attribute serves as an adjacency list of nodes in the document graph.
+	HasPart []string `json:"hasPart"`
+
+	// URLs of metadata associated with the topic of this page.  Loosely correponds with
+	// schema.org/CreativeWork#about, though unlike its namesake, this attribute is an associative array of
+	// metadata in an arbitrary set of vocabularies (keyed by the vocabulary).
+	About map[string]string `json:"about"`
 }
 
 // Source represents information on the source of the document.
@@ -77,6 +44,31 @@ type Source struct {
 
 	// The wiki/project/hostname of source document
 	Authority string `json:"authority"`
+}
+
+// Node represents a node in the document graph
+type Node struct {
+	// Globally unique identifier
+	ID string `json:"id"`
+
+	// Source (MediaWiki) metadata for this node
+	Source Source `json:"_source"`
+
+	// Node name (corresponds with schema.org/Thing#name).  For a section, corresponds to the text of
+	// the first header (Parsoid HTML output).
+	Name string `json:"name,omitempty"`
+
+	// URLs of content that this node is a part of.  Loosely corresponds with
+	// schema.org/CreativeWork#isPartOf, yet unlike its namesake, this attribute serves as an adjacency
+	// list of nodes in the document graph.
+	IsPartOf []string `json:"isPartOf"`
+
+	// Date and time of last modification (corresponds with schema.org/CreativeWork#dateModified)
+	DateModified time.Time `json:"dateModified"`
+
+	Citation []string `json:"citation"`
+	// The raw HTML context of the corresponding node.
+	Unsafe string `json:"unsafe"`
 }
 
 type metadata struct {
@@ -100,23 +92,6 @@ func NewThing() *Thing {
 	return &Thing{metadata: metadata{Context: "https://schema.org", Type: "Thing"}}
 }
 
-//GetEnLang returns en Language model
-func GetEnLang() *Language {
-	return &Language{
-		Name:       "English",
-		Identifier: "en",
-		Direction:  "ltr",
-	}
-}
-
-func NewLicense() *License {
-	return &License{
-		Identifier: "CC-BY-SA-3.0",
-		Name:       "Creative Commons Attribution Share Alike 3.0 Unported",
-		URL:        "https://creativecommons.org/licenses/by-sa/3.0/",
-	}
-}
-
 // RelatedTopic corresponds to a Wikidata topic that relates to a Node's content.
 type RelatedTopic struct {
 	ID       string  `json:"id"`
@@ -134,15 +109,5 @@ type Citation struct {
 // Citations citations collection
 type Citations struct {
 	Citations []Citation `json:"citations"`
-	IsPartOf  []Entity   `json:"is_part_of"`
-}
-
-// Book book source
-type Book struct {
-	Isbn          string
-	Name          string
-	Author        []string
-	Publisher     string
-	Datepublished string
-	Thumbnailurl  string
+	IsPartOf  []string   `json:"is_part_of"`
 }

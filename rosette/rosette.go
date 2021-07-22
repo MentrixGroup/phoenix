@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/jpillora/backoff"
+	"github.com/wikimedia/phoenix/common"
 )
 
 const (

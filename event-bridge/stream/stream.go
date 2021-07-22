@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/eevans/wikimedia/streams"
+	"github.com/wikimedia/phoenix/common"
 	"gopkg.in/yaml.v2"
 )
 
