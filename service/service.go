@@ -12,6 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/AlisterIgnatius/phoenix/common"
+	"github.com/AlisterIgnatius/phoenix/storage"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,8 +24,6 @@ import (
 	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 	"github.com/rs/cors"
-	"github.com/wikimedia/phoenix/common"
-	"github.com/wikimedia/phoenix/storage"
 )
 
 const (

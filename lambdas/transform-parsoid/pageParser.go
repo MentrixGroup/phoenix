@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/wikimedia/phoenix/common"
 )
 
 func getPageName(head *goquery.Selection) (string, error) {

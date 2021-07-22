@@ -102,7 +102,7 @@ func (i *DynamoDBIndex) Apply(update *Update) error {
 	for _, n := range update.Nodes {
 		// The DynamoDB transaction is limited to 25 items; Bailing out after reaching the upper bound on items means
 		// that any document with more than 24 sections (the transaction includes an item for the page as well) will
-		// have the remaining sections silently dropped. https://github.com/wikimedia/phoenix/issues/68 was opened to
+		// have the remaining sections silently dropped. https://github.com/AlisterIgnatius/phoenix/issues/68 was opened to
 		// properly address this, but in the mean time this work-around is preferable to the resulting
 		// ValidationException.
 		if count >= 25 {

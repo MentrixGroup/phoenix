@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/wikimedia/phoenix/common"
 )
 
 const slct = "ol.references"

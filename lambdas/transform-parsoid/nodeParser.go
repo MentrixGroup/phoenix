@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/wikimedia/phoenix/common"
 )
 
 var (

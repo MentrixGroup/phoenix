@@ -1,4 +1,4 @@
-module github.com/wikimedia/phoenix/common
+module github.com/AlisterIgnatius/phoenix/common
 
 go 1.14
 
