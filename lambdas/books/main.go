@@ -9,14 +9,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AlisterIgnatius/phoenix/common"
-	"github.com/AlisterIgnatius/phoenix/storage"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/wikimedia/phoenix/common"
+	"github.com/wikimedia/phoenix/storage"
 )
 
 var (

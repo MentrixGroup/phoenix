@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/stretchr/testify/require"
+	"github.com/wikimedia/phoenix/common"
 )
 
 var (

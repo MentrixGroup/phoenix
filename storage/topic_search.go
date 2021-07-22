@@ -7,10 +7,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AlisterIgnatius/phoenix/common"
 	elasticsearch "github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/elastic/go-elasticsearch/v7/esutil"
+	"github.com/wikimedia/phoenix/common"
 )
 
 type UpdateStats esutil.BulkIndexerStats

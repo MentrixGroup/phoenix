@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/wikimedia/phoenix/common"
 )
 
 const userAgent string = "Phoenix_lambda/0.0.0"

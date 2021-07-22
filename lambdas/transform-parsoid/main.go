@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlisterIgnatius/phoenix/common"
-	"github.com/AlisterIgnatius/phoenix/storage"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -19,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/wikimedia/phoenix/common"
+	"github.com/wikimedia/phoenix/storage"
 )
 
 // Name to assign (unnamed) lead/intro sections.
@@ -109,7 +109,7 @@ func sourceParseEvent(snsClient *sns.SNS, source *common.SourseParseEvent) (*sns
 }
 
 // A helper function that returns a PostPutNodeCallback function conditional on a env variable.
-func postPutNodeCallback(snsClient *sns.SNS) func(node common.Section) error {
+func postPutNodeCallback(snsClient *sns.SNS) func(node common.Node) error {
 	var disabled = false
 
 	if env, ok := os.LookupEnv("DISABLE_PUT_NODE_CALLBACK"); ok {
@@ -120,7 +120,7 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Section) error {
 
 	// If not disabled (read: if enabled), return a callback that will deliver a "node published" SNS message.
 	if !disabled {
-		return func(node common.Section) error {
+		return func(node common.Node) error {
 			var b []byte
 			var err error
 
@@ -141,7 +141,7 @@ func postPutNodeCallback(snsClient *sns.SNS) func(node common.Section) error {
 	}
 
 	// If disabled, return a no-op callback.
-	return func(node common.Section) error {
+	return func(node common.Node) error {
 		return nil
 	}
 }

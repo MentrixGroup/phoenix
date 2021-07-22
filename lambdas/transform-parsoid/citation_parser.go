@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/wikimedia/phoenix/common"
 )
 
 const slct = "ol.references"
@@ -30,10 +30,10 @@ func getRefs(li *goquery.Selection, page string) []string {
 }
 
 // Add citations here when data structure would be ready
-func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page) (*common.Citations, *common.Section, error) {
+func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page) (*common.Citations, *common.Node, error) {
 	var err error
 	var unsafe string
-	var node = &common.Section{}
+	var node = &common.Node{}
 
 	citations := &common.Citations{}
 	references := document.Find(slct)
@@ -73,9 +73,9 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 		return citations, nil, err
 	}
 
-	citations.IsPartOf = []common.Entity{common.Entity{Identifier: page.ID}}
+	citations.IsPartOf = []string{page.ID}
 	node.ID = fmt.Sprintf("pages/%s/%s_citations", replaceSpaces(page.Name), replaceSpaces(page.Name))
-	node.Text = unsafe
+	node.Unsafe = unsafe
 
 	return citations, node, nil
 }
