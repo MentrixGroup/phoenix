@@ -73,7 +73,7 @@ func parseParsoidDocumentCitation(document *goquery.Document, page *common.Page)
 		return citations, nil, err
 	}
 
-	citations.IsPartOf = []string{page.ID}
+	citations.IsPartOf = []string{fmt.Sprintf("pages/%s/%s_citations_enhanced", replaceSpaces(page.Name), replaceSpaces(page.Name))}
 	node.ID = fmt.Sprintf("pages/%s/%s_citations", replaceSpaces(page.Name), replaceSpaces(page.Name))
 	node.Unsafe = unsafe
 

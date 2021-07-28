@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/wikimedia/phoenix/common"
+	"github.com/AlisterIgnatius/phoenix/common"
 )
 
 // NewClient creates new API client
