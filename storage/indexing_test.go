@@ -3,9 +3,9 @@ package storage
 import (
 	"testing"
 
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wikimedia/phoenix/common"
 )
 
 func TestIndex(t *testing.T) {
