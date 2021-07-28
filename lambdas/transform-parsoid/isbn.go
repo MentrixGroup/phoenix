@@ -87,9 +87,9 @@ func validate(isbn string) bool {
 	// fmt.Println(len(strings.ReplaceAll(isbn, "-", "")))
 	switch len(str) {
 	case 10:
-		return Validate10(str)
+		return validate10(str)
 	case 13:
-		return Validate13(str)
+		return validate13(str)
 	}
 	return false
 }
@@ -121,7 +121,7 @@ func convertTo13(isbn10 string) string {
 	str := strings.ReplaceAll(isbn10, "-", "")
 
 	isbn13 := "978" + str[:9]
-	d, err := CheckDigit13(isbn13)
+	d, err := checkDigit13(isbn13)
 
 	if err != nil {
 		return ""
@@ -135,7 +135,7 @@ func getSourceId(isbn string) string {
 
 	switch len(str) {
 	case 10:
-		return fmt.Sprintf("/books/%s.json", ConvertTo13(str))
+		return fmt.Sprintf("/books/%s.json", convertTo13(str))
 	case 13:
 		return fmt.Sprintf("/books/%s.json", str)
 	}

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/wikimedia/phoenix/common"
 )
 
 func parseParsoidDocument(document *goquery.Document, snsClient *sns.SNS) (*common.Page, []common.Node, []common.Citations, *common.Citations, *common.Node, error) {
