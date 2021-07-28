@@ -9,12 +9,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/AlisterIgnatius/phoenix/common"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
 	"github.com/spaolacci/murmur3"
-	"github.com/wikimedia/phoenix/common"
 )
 
 // ErrNotFound indicates that a requested resource does not exist in storage
@@ -221,17 +221,17 @@ func (r *Repository) PutPage(page *common.Page) error {
 }
 
 // PutBook stores Books as a source.
-func (r *Repository) PutBook(page *common.Book) error {
+func (r *Repository) PutBook(book *common.Book) error {
 	var data []byte
 	var err error
 
-	if data, err = encodeJSON(page); err != nil {
+	if data, err = encodeJSON(book); err != nil {
 		return err
 	}
 
 	metadata := map[string]*string{"type": aws.String("common.Book")}
 
-	if err = r.put(fmt.Sprintf("books/%s", Book.Isbn), data, metadata); err != nil {
+	if err = r.put(fmt.Sprintf("books/%s", book.Isbn), data, metadata); err != nil {
 		return err
 	}
 
@@ -239,7 +239,7 @@ func (r *Repository) PutBook(page *common.Book) error {
 }
 
 // PutNode stores a Node.
-func (r *Repository) PutNode(node *common.Node) (string, error) {
+func (r *Repository) PutNode(node *common.Node) error {
 
 	var data []byte
 	var err error
@@ -262,7 +262,7 @@ func (r *Repository) PutNode(node *common.Node) (string, error) {
 }
 
 // PutNode stores a Node Citations.
-func (r *Repository) PutNodeCitations(citation *common.Citation) error {
+func (r *Repository) PutNodeCitations(id string, citation *[]common.Citation) error {
 	var data []byte
 	var err error
 
@@ -272,7 +272,7 @@ func (r *Repository) PutNodeCitations(citation *common.Citation) error {
 
 	metadata := map[string]*string{"type": aws.String("common.Citations")}
 
-	if err = r.put(citation.ID, data, metadata); err != nil {
+	if err = r.put(id, data, metadata); err != nil {
 		return err
 	}
 
@@ -311,7 +311,7 @@ func (r *Repository) PutPageCitationEnhanced(citation *common.Citations) error {
 
 	metadata := map[string]*string{"type": aws.String("common.Citations")}
 
-	if err = r.put(citation.ID, data, metadata); err != nil {
+	if err = r.put(citation.IsPartOf[0], data, metadata); err != nil {
 		return err
 	}
 
@@ -415,7 +415,8 @@ func (r *Repository) Apply(update *Update) error {
 	// Upload linked data objects.
 	for k, v := range update.Abouts {
 		var err error
-		v.ID = fmt.Sprintf("pages/%s/%s_about_%s", strings.ReplaceAll(update.Page.Name, " ", "_"), k)
+		pagename := strings.ReplaceAll(update.Page.Name, " ", "_")
+		v.ID = fmt.Sprintf("pages/%s/%s_about_%s", pagename, pagename, k)
 
 		if err = r.PutAbout(&v); err != nil {
 			return fmt.Errorf("error storing linked data object: %w", err)
@@ -427,7 +428,7 @@ func (r *Repository) Apply(update *Update) error {
 	for _, citation := range update.NodesCitations {
 		var err error
 
-		if err = r.PutNode(&citation); err != nil {
+		if err = r.PutNodeCitations(fmt.Sprintf("%s_citations", citation.IsPartOf), &citation.Citations); err != nil {
 			return fmt.Errorf("error storing node: %w", err)
 		}
 	}
@@ -543,18 +544,6 @@ func makeNodeID(node *common.Node) string {
 }
 
 // Return formatted keys for page, node, and data objects.
-func pagef(id string) string {
-	return fmt.Sprintf("/page/%s", id)
-}
-
-func nodef(id string) string {
-	return fmt.Sprintf("/node/%s", id)
-}
-
-func aboutf(id string) string {
-	return fmt.Sprintf("/data/%s", id)
-}
-
 func topicsf(id string) string {
 	return fmt.Sprintf("/topics/%s", id)
 }
