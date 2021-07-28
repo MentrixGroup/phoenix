@@ -90,7 +90,7 @@ func sendSnsEvent(snsClient *sns.SNS, topic string, data []byte) (*sns.PublishOu
 	return output, nil
 }
 
-func sourceParseEvent(snsClient *sns.SNS, source *common.SourseParseEvent) (*sns.PublishOutput, error) {
+func sourceParseEvent(snsClient *sns.SNS, source *common.SourceParseEvent) (*sns.PublishOutput, error) {
 	var b []byte
 	var err error
 	var output *sns.PublishOutput

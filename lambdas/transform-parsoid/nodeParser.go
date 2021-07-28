@@ -55,7 +55,7 @@ func getCitation(document *goquery.Document, cId, page string, section string, s
 
 	if isbn != "" && validate(isbn) {
 		citation.Source = getSourceId(isbn)
-		output, err := sourceParseEvent(snsClient, &common.SourseParseEvent{ID: isbn, Page: page, Section: section})
+		output, err := sourceParseEvent(snsClient, &common.SourceParseEvent{ID: isbn, Page: page, Section: section})
 
 		if err != nil {
 			return citation, fmt.Errorf("error sendig out SNS event: %s", err)
