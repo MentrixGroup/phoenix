@@ -66,7 +66,7 @@ type Node struct {
 	// Date and time of last modification (corresponds with schema.org/CreativeWork#dateModified)
 	DateModified time.Time `json:"dateModified"`
 
-	Citation []string `json:"citation"`
+	Citation string `json:"citation"`
 	// The raw HTML context of the corresponding node.
 	Unsafe string `json:"unsafe"`
 }
@@ -104,6 +104,7 @@ type Citation struct {
 	Identifier string   `json:"identifier"`
 	Text       string   `json:"text"`
 	References []string `json:"references"`
+	Source     string   `json:"source,omitempty"`
 }
 
 // Citations citations collection
