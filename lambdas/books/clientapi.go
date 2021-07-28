@@ -1,10 +1,12 @@
-package main
+package books
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/wikimedia/phoenix/common"
 )
 
 // NewClient creates new API client
@@ -65,7 +67,7 @@ func (c *Client) get(query string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *Client) GetBook(isbn string) (*Book, error) {
+func (c *Client) GetBook(isbn string) (*common.Book, error) {
 	var body []byte
 	var err error
 
@@ -82,7 +84,7 @@ func (c *Client) GetBook(isbn string) (*Book, error) {
 
 	gbook := response.Items[0].Volumeinfo
 
-	book := &Book{
+	book := &common.Book{
 		Isbn:          isbn,
 		Name:          fmt.Sprintf("%s: %s", gbook.Title, gbook.Subtitle),
 		Author:        gbook.Authors,
