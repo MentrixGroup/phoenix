@@ -1,5 +1,5 @@
 // Package lambda to parse books
-package main
+package books
 
 import (
 	"context"
