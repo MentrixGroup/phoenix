@@ -1,10 +1,10 @@
-module github.com/wikimedia/phoenix/lambdas/merge-schema.org
+module github.com/AlisterIgnatius/phoenix/lambdas/merge-schema.org
 
-go 1.14
+go 1.15
 
 require (
-	github.com/aws/aws-lambda-go v1.19.1
-	github.com/aws/aws-sdk-go v1.35.0
-	github.com/wikimedia/phoenix/common v0.0.0-20200928232010-e94c28a05564
-	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10
+	github.com/AlisterIgnatius/phoenix/common v0.0.0-20210728142129-5d93f74cf101
+	github.com/aws/aws-lambda-go v1.25.0
+	github.com/aws/aws-sdk-go v1.40.9
+	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
 )
