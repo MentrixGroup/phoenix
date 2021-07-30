@@ -6,7 +6,7 @@ include ../../.config.mk
 
 GOOS    := linux
 BINARY  := main
-SOURCES := main.go nodeParser.go pageParser.go parser.go
+SOURCES := main.go nodeParser.go pageParser.go parser.go citation_parser.go isbn.go
 
 # Configuration
 LDFLAGS  = -X main.awsAccount=$(PHX_ACCOUNT_ID)

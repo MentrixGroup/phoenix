@@ -1,6 +1,8 @@
 github.com/AlisterIgnatius/phoenix/common v0.0.0-20210728112927-8de4184d27db/go.mod h1:4d7/cdlBjs2Pg+XqYL/Bl/LcyTNa+QA3U2pmNevWVsI=
 github.com/AlisterIgnatius/phoenix/common v0.0.0-20210728140350-ed2fdaeec156 h1:uvKh9r6UrSnRLxReUGDzkCSmooCmaDlogy4+rgoNctg=
 github.com/AlisterIgnatius/phoenix/common v0.0.0-20210728140350-ed2fdaeec156/go.mod h1:4d7/cdlBjs2Pg+XqYL/Bl/LcyTNa+QA3U2pmNevWVsI=
+github.com/AlisterIgnatius/phoenix/common v0.0.0-20210730113837-39ea1a7d4130 h1:vUzbzNJFYfG2ZdiITFezYShIN+Gehu5bTnD+YbxDkBA=
+github.com/AlisterIgnatius/phoenix/common v0.0.0-20210730113837-39ea1a7d4130/go.mod h1:4d7/cdlBjs2Pg+XqYL/Bl/LcyTNa+QA3U2pmNevWVsI=
 github.com/AlisterIgnatius/phoenix/storage v0.0.0-20210728133508-03a17f8f0173 h1:kJBfXSGLTCg/fWk/dfUKHzK738c8mE5cMq2JKs2/nKw=
 github.com/AlisterIgnatius/phoenix/storage v0.0.0-20210728133508-03a17f8f0173/go.mod h1:HVnd505bOc1CvNFQhzw9thp68JRNFwAxEaRXyfz+wXw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
