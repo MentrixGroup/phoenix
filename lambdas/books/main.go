@@ -84,7 +84,7 @@ func Handler(ctx context.Context, event events.SNSEvent, cl *Client) {
 			continue
 		}
 
-		if book, err = cl.GetBook(msg.isbn); err != nil {
+		if book, err = cl.GetBook(msg.ID); err != nil {
 			logger.Error("error making HTTP request: %w", err)
 			return
 		}
