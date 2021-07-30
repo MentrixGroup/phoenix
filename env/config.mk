@@ -23,6 +23,10 @@ PHX_SNS_RAW_CONTENT_WD_LINKED     = $(PHX_PREFIX)-sns-raw-content-schemaorg
 # Structured Content Store
 PHX_SNS_NODE_PUBLISHED            = $(PHX_PREFIX)-sns-node-published
 
+# Topic that receives events when new Book objects are found in citations
+# Structured Content Store
+PHX_SNS_SOURCE_PARSE_PUBLISHED            = $(PHX_PREFIX)-sns-source-parse-published
+
 
 ######
 # S3 resources
