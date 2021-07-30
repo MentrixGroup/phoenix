@@ -78,6 +78,11 @@ PHX_LAMBDA_MERGE_SCHEMAORG = $(PHX_PREFIX)-lambda-merge-schemaorg
 # storage (See PHX_S3_STRUCTURED_CONTENT_BUCKET)
 PHX_LAMBDA_TRANSFORM_PARSOID = $(PHX_PREFIX)-lambda-transform-parsoid
 
+# Lambda subscribed to events that signal that book source was found for
+# a citation, gets book content into canonical tructure and save to S3 
+# storage (See PHX_S3_STRUCTURED_CONTENT_BUCKET)
+PHX_LAMBDA_BOOK_SOURCE = $(PHX_PREFIX)-lambda-book-source
+
 # Lambda subscribed to events signaling that a new Node object has been stored.
 # Retrieves related topic information for the Node, and stores the result.
 PHX_LAMBDA_RELATED_TOPICS = $(PHX_PREFIX)-lambda-related-topics

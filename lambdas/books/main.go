@@ -26,10 +26,6 @@ var (
 	dynamoDBPageTitles        string
 	dynamoDBNodeNames         string
 	s3StructuredContentBucket string
-	s3RawBucket               string
-	s3RawIncomeFolder         string
-	s3RawLinkedFolder         string
-	snsNodePublished          string
 
 	debug bool = false
 	log   *common.Logger
@@ -116,10 +112,6 @@ func init() {
 	log.Debug("DynamoDB page titles table .......: %s", dynamoDBPageTitles)
 	log.Debug("DynamoDB node names table ........: %s", dynamoDBNodeNames)
 	log.Debug("S3 structured content bucket .....: %s", s3StructuredContentBucket)
-	log.Debug("S3 raw content bucket ............: %s", s3RawBucket)
-	log.Debug("S3 raw content incoming folder ...: %s", s3RawIncomeFolder)
-	log.Debug("S3 raw content linked folder .....: %s", s3RawLinkedFolder)
-	log.Debug("SNS node published topic .........: %s", snsNodePublished)
 }
 
 func main() {
