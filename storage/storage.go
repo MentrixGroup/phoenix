@@ -273,8 +273,6 @@ func (r *Repository) PutNodeCitations(id string, citation *[]common.Citation) er
 
 	metadata := map[string]*string{"type": aws.String("common.Citations")}
 
-	fmt.Println(id)
-
 	if err = r.put(id, data, metadata); err != nil {
 		return err
 	}
@@ -478,7 +476,6 @@ func encodeJSON(v interface{}) ([]byte, error) {
 }
 
 func validateSource(source *common.Source) error {
-	fmt.Println(fmt.Sprintf("SOURCE ID: %d", source.ID))
 	if source.ID <= 0 {
 		return fmt.Errorf("uninitialized common.Source.ID attribute (+%v)", source)
 	}
@@ -495,8 +492,6 @@ func validateSource(source *common.Source) error {
 }
 
 func validatePage(page *common.Page) error {
-	fmt.Println(fmt.Sprintf("PAGE SOURCE ID: %d", page.Source.ID))
-
 	if page.Name == "" {
 		return fmt.Errorf("uninitialized page.Name attribute (%+v)", page)
 	}
