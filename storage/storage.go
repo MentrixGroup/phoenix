@@ -203,9 +203,10 @@ func (r *Repository) PutPage(page *common.Page) error {
 	var data []byte
 	var err error
 
-	if err = validatePage(page); err != nil {
-		return err
-	}
+	fmt.Println(page.Source)
+	// if err = validatePage(page); err != nil {
+	// 	return err
+	// }
 
 	if data, err = encodeJSON(page); err != nil {
 		return err
