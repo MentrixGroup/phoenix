@@ -386,8 +386,6 @@ func (r *Repository) Apply(update *Update) error {
 	// also be made for handling some of these steps concurrently (we could easily parallelize
 	// uploads of Node & Things, for example), but we're not going there yet either.
 
-	validateSource(&update.Page.Source)
-
 	update.Page.HasPart = make([]string, 0)
 
 	// Upload node objects.  Remember: the ordering of HasPart matters (keep this in mind
@@ -428,7 +426,7 @@ func (r *Repository) Apply(update *Update) error {
 	for _, citation := range update.NodesCitations {
 		var err error
 
-		if err = r.PutNodeCitations(fmt.Sprintf("%s_citations", citation.IsPartOf), &citation.Citations); err != nil {
+		if err = r.PutNodeCitations(fmt.Sprintf("%s_citations", citation.IsPartOf[0]), &citation.Citations); err != nil {
 			return fmt.Errorf("error storing node: %w", err)
 		}
 	}

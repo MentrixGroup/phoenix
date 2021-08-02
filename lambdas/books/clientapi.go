@@ -1,4 +1,4 @@
-package books
+package main
 
 import (
 	"encoding/json"
@@ -80,6 +80,10 @@ func (c *Client) GetBook(isbn string) (*common.Book, error) {
 
 	if err := json.Unmarshal(body, response); err != nil {
 		return nil, err
+	}
+
+	if len(response.Items) <= 0 {
+		return nil, fmt.Errorf("error book not found: %w", err)
 	}
 
 	gbook := response.Items[0].Volumeinfo
