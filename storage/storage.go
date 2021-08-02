@@ -494,6 +494,8 @@ func validateSource(source *common.Source) error {
 }
 
 func validatePage(page *common.Page) error {
+	fmt.Println(fmt.Sprintf("PAGE SOURCE ID: %d", page.Source.ID))
+
 	if page.Name == "" {
 		return fmt.Errorf("uninitialized page.Name attribute (%+v)", page)
 	}
@@ -506,9 +508,10 @@ func validatePage(page *common.Page) error {
 	if len(page.HasPart) < 1 {
 		return fmt.Errorf("zero-length page.HasPart attribute (%+v)", page)
 	}
-	fmt.Println(fmt.Sprintf("PAGE SOURCE ID: %d", page.Source.ID))
 
-	return validateSource(&page.Source)
+	// return validateSource(&page.Source)
+	// We might not need Source in the future.
+	return nil
 }
 
 func validateNode(node *common.Node) error {
