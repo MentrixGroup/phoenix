@@ -117,7 +117,7 @@ func parseParsoidDocumentNodes(document *goquery.Document, page *common.Page, sn
 
 		node.DateModified = modified
 		unqn := fmt.Sprintf("%s_%s", replaceSpaces(page.Name), replaceSpaces(node.Name))
-		node.Citation = fmt.Sprintf("sections/%s/%s_citations.json", unqn, unqn)
+		node.Citation = fmt.Sprintf("sections/%s/%s_citations", unqn, unqn)
 
 		if val, ok := ignoredNodes[node.Name]; ok && val {
 			continue
