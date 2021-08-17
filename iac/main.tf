@@ -6,21 +6,17 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket = "--PUT S3 BUCKET HERE--"
-    key    = "iac/state"
-    region = "--PUT YOUR AWS REGION HERE--"
-    dynamodb_table = "--PUT DYNAMODB TABLE HERE--"
-    profile = "--PUT YOUR AWS REGION HERE--"
+  backend "remote" {
+    organization = "mentrix"
+    workspaces {
+      name = "phoenix"
+    }
   }
 
   required_version = ">= 0.14.9"
 }
 
-provider "aws" {
-  profile = var.aws_profile
-  region  = var.aws_region
-}
+provider "aws" {}
 
 module "lambdas" {
   source = "./shared/lambda"
