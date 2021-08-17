@@ -1,14 +1,3 @@
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "--PUT YOUR AWS REGION HERE--"
-}
-
-variable "aws_profile" {
-  description = "AWS profile name"
-  type        = string
-  default     = "--PUT YOUR PROFILE HERE--"
-}
 
 # "phoenix-" is a prefix for all required resources and this should match the one from ".config.mk" in the root directory
 variable "lambdas" {
