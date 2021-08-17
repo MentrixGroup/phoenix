@@ -35,44 +35,15 @@ We've modeled a number of use cases, some in partnership with the Structured Dat
 - <a name="ref8">[8]</a>: [Event-driven architecture on English Wikipedia](https://en.wikipedia.org/wiki/Event-driven_architecture)[↩](#secondary-focus)
 - <a name="ref9">[9]</a>: Command Query Responsibility Segregation (**CQRS**) means that the data model for reading doesn't have to be the same as the model for updating.[↩](#secondary-focus)
 ## Content descriptions
-<table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td nowrap><code>common</code></td>
-      <td>Common structures, helpers, etc</td>
-    </tr>
-    <tr>
-      <td nowrap><code>env</code></td>
-      <td>Package for project-wide constants (AWS account &amp; resource information)</td>
-    </tr>
-    <tr>
-      <td nowrap><code>event-bridge</code></td>
-      <td>Send filtered change events to an SNS topic</td>
-    </tr>
-    <tr>
-      <td nowrap><code>lambdas/fetch-changed</code></td>
-      <td>Subscribe to change events and download the corresponding Parsoid HTML to an S3</td>
-    </tr>
-    <tr>
-      <td nowrap><code>lambdas/fetch-schema.org</code></td>
-      <td>Create schema.org JSON-LD output from Wikidata, and upload to S3. Triggered when HTML is added to <code>incoming/</code> (see <code>lambdas/fetch-changed</code>)</td>
-    </tr>
-    <tr>
-      <td nowrap><code>lambdas/merge-schema.org</code></td>
-      <td>Merge JSON-LD with HTML documents, and upload to S3. Triggered when linked data is added to <code>schema.org/</code> (see <code>lambdas/fetch-schema.org</code>)</td>
-    </tr>
-    <tr>
-      <td nowrap><code>iac</code></td>
-      <td>Terraform configuration for deploying all lambdas to AWS</td>
-    </tr>
-  </tbody>
-</table>
+||Description
+|----------|----------|
+|`common`|Common structures, helpers, etc|
+|`env`|Package for project-wide constants (AWS account & resource information)|
+|`event-bridge`|Send filtered change events to an SNS topic|
+|`lambdas/fetch-changed`|Subscribe to change events and download the corresponding Parsoid HTML to an S3|
+|`lambdas/merge-schema.org`|Merge JSON-LD with HTML documents, and upload to S3. Triggered when linked data is added to [schema.org](https://schema.org/) (see `lambdas/fetch-schema.org`)|
+|`iac`|Terraform configuration for deploying all lambdas to AWS|
+
 ## Terraform IaC
 The `iac` directory contain a configuration for deploying lambda function to AWS.
 - First setup `~/.aws/credentials` and `~/.aws/config`.
