@@ -117,16 +117,17 @@ resource "aws_iam_role_policy_attachment" "s3_read" {
 
 // DynamoDB table access
 
-data "aws_dynamodb_table" "dynamodb_table" {
- count = length(var.dynamodb_tables)
- name = "${var.dynamodb_tables[count.index]}"
-}
+// We don't reference existing infrastructure as we are creating it in terraform.
+# data "aws_dynamodb_table" "dynamodb_table" {
+#  count = length(var.dynamodb_tables)
+#  name = "${var.dynamodb_tables[count.index]}"
+# }
 
 data "template_file" "dynamodb_table_policy_template" {
  count = length(var.dynamodb_tables)
  template = "${file("./shared/iam/dynamodb_table_policy.tpl")}"
  vars = {
-   resource = "${data.aws_dynamodb_table.dynamodb_table[count.index].arn}"
+   resource = var.dynamodb_tables[count.index]
  }
 }
 
@@ -139,5 +140,5 @@ resource "aws_iam_policy" "dynamodb_table_policy" {
 resource "aws_iam_role_policy_attachment" "dynamodb_table" {
  count = length(var.dynamodb_tables)
  role  = aws_iam_role.lambda_exec.name
- policy_arn = "${aws_iam_policy.dynamodb_table_policy[count.index].arn}"
+ policy_arn = var.dynamodb_tables[count.index]
 }
