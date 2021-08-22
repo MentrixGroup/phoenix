@@ -56,6 +56,16 @@ variable "dynamodb_tables" {
   }
 }
 
+variable "s3_buckets" {
+  type = map(any)
+  default = {
+    phoenix-raw-content = {
+      acl = "private",
+      versioning = false
+    }
+  }
+}
+
 variable "env_tag" {
   type    = string
   default = "staging"
