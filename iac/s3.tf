@@ -8,6 +8,4 @@ module "s3_buckets" {
   versioning = {
     enabled = each.value.versioning
   }
-
-  tags = local.common_tags
 }

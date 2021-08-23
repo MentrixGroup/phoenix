@@ -12,13 +12,4 @@ module "dynamodb_tables" {
       type = each.value.attribute_type
     }
   ]
-
-  tags = local.common_tags
-
-}
-
-output "dynamo_table_arns" {
-  value = tomap({
-    for key, dynamodb_table_arn in module.dynamodb_tables : key => dynamodb_table_arn
-  })
 }

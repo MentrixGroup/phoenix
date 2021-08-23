@@ -16,4 +16,9 @@ terraform {
   required_version = ">= 0.14.9"
 }
 
-provider "aws" {}
+provider "aws" {
+  default_tags {
+    tags = local.common_tags
+  }
+}
+
