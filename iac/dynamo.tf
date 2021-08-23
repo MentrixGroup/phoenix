@@ -3,7 +3,7 @@ module "dynamodb_tables" {
 
   for_each = var.dynamodb_tables
 
-  name     = each.key
+  name     = "${var.project}-${each.key}"
   hash_key = each.value.hash_key
 
   attributes = [

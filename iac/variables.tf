@@ -1,54 +1,15 @@
 
 # "phoenix-" is a prefix for all required resources and this should match the one from ".config.mk" in the root directory
-variable "lambdas" {
-  type = list(object({
-    name                   = string
-    path                   = string
-    sns_subscription_topic = string
-    sns_publish_topics     = list(string)
-    write_buckets          = list(string)
-    read_buckets           = list(string)
-    dynamodb_tables        = list(string)
-  }))
-  default = [{
-    name                   = "phoenix-fetch-changed"
-    path                   = "../lambdas/fetch-changed/function.zip"
-    sns_publish_topics     = ["phoenix-sns-raw-content-incoming"]
-    sns_subscription_topic = "phoenix-event-streams-bridge"
-    write_buckets          = ["phoenix-raw-content"]
-    read_buckets           = []
-    dynamodb_tables        = []
-    },
-    {
-      name                   = "phoenix-fetch-schemaorg"
-      path                   = "../lambdas/fetch-schema.org/function.zip"
-      sns_subscription_topic = "phoenix-sns-raw-content-incoming"
-      sns_publish_topics     = ["phoenix-sns-raw-content-schemaorg"]
-      write_buckets          = ["phoenix-raw-content"]
-      read_buckets           = ["phoenix-raw-content"]
-      dynamodb_tables        = []
-    },
-    {
-      name                   = "phoenix-merge-schemaorg"
-      path                   = "../lambdas/merge-schema.org/function.zip"
-      sns_subscription_topic = "phoenix-sns-raw-content-schemaorg"
-      write_buckets          = ["phoenix-raw-content"]
-      sns_publish_topics     = []
-      read_buckets           = ["phoenix-raw-content"]
-      dynamodb_tables        = []
-    },
-  ]
-}
 
 variable "dynamodb_tables" {
   type = map(any)
   default = {
-    phoenix-node-names = {
+    node-names = {
       hash_key       = "Title",
       attribute_name = "Title",
       attribute_type = "S"
     },
-    phoenix-page-titles = {
+    page-titles = {
       hash_key       = "Name",
       attribute_name = "Name",
       attribute_type = "S"
@@ -59,23 +20,53 @@ variable "dynamodb_tables" {
 variable "s3_buckets" {
   type = map(any)
   default = {
-    phoenix-raw-content = {
+    raw-content = {
+      acl = "private",
+      versioning = false
+    },
+    structured-content = {
       acl = "private",
       versioning = false
     }
   }
 }
 
+variable "sns_topics" {
+  type = map(any)
+  default = {
+    sns-raw-content-schemaorg = {
+      fifo_topic = false
+    },
+    sns-node-published = {
+      fifo_topic = false
+    },
+    sns-raw-content-schemaorg = {
+      fifo_topic = false
+    },
+    sns-raw-content-incoming = {
+      fifo_topic = false
+    },
+    event-streams-bridge = {
+      fifo_topic = false
+    }
+
+  }
+}
 variable "env_tag" {
   type    = string
   default = "staging"
 }
 
+variable "project" {
+  type = string
+  default = "phoenix"
+}
+
 locals {
   # Common tags to be assigned to all resources
   common_tags = {
-    Project     = "Phoenix"
-    Creator     = "Terraform"
+    Project     = var.project
+    ManagedBy     = "Terraform"
     Environment = var.env_tag
   }
 

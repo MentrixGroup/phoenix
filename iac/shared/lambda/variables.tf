@@ -32,3 +32,8 @@ variable "dynamodb_tables" {
   description = "Dynamodb tables a lambda has access to"
   type = list(string)
 }
+
+variable "common_tags" {
+  description = "Tags to add to the resources created"
+  type = map(any)
+}

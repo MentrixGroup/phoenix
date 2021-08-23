@@ -17,28 +17,55 @@ terraform {
 }
 
 provider "aws" {}
-
-module "lambdas" {
+  
+module "lambda_fetch-changed" {
   source = "./shared/lambda"
-  count  = length(var.lambdas)
 
-  function_name          = var.lambdas[count.index].name
-  file_path              = var.lambdas[count.index].path
-  sns_subscription_topic = var.lambdas[count.index].sns_subscription_topic
-  sns_publish_topics     = var.lambdas[count.index].sns_publish_topics
-  write_buckets          = var.lambdas[count.index].write_buckets
-  read_buckets           = var.lambdas[count.index].read_buckets
-  dynamodb_tables        = var.lambdas[count.index].dynamodb_tables
+  function_name          = "${var.project}-fetch-schemaorg"
+  file_path              = "../lambdas/fetch-changed/function.zip"
+  sns_subscription_topic = module.sns_topics["event-streams-bridge"].sns_topic_arn
+  sns_publish_topics     = [module.sns_topics["sns-raw-content-incoming"].sns_topic_arn]
+  write_buckets          = [module.s3_buckets["raw-content"].s3_bucket_id]
+  read_buckets           = []
+  dynamodb_tables        = []
+  common_tags = local.common_tags
+}
+
+module "lambda_fetch-schemaorg" {
+  source = "./shared/lambda"
+
+  function_name          = "${var.project}-fetch-schemaorg"
+  file_path              = "../lambdas/fetch-schema.org/function.zip"
+  sns_subscription_topic = module.sns_topics["sns-raw-content-incoming"].sns_topic_arn
+  sns_publish_topics     = [module.sns_topics["sns-raw-content-schemaorg"].sns_topic_arn]
+  write_buckets          = [module.s3_buckets["raw-content"].s3_bucket_id]
+  read_buckets           = [module.s3_buckets["raw-content"].s3_bucket_id]
+  dynamodb_tables        = []
+  common_tags = local.common_tags
+}
+
+module "lambda_merge_schemaorg" {
+  source = "./shared/lambda"
+
+  function_name          = "${var.project}-merge-schemaorg"
+  file_path              = "../lambdas/merge-schema.org/function.zip"
+  sns_subscription_topic = module.sns_topics["sns-raw-content-schemaorg"].sns_topic_arn
+  sns_publish_topics     = []
+  write_buckets          = [module.s3_buckets["raw-content"].s3_bucket_id]
+  read_buckets           = [module.s3_buckets["raw-content"].s3_bucket_id]
+  dynamodb_tables        = []
+  common_tags = local.common_tags
 }
 
 module "lambda_parsoid" {
   source = "./shared/lambda"
 
-  function_name          = "phoenix-transform-parsoid"
+  function_name          = "${var.project}-transform-parsoid"
   file_path              = "../lambdas/transform-parsoid/function.zip"
-  sns_subscription_topic = "phoenix-sns-raw-content-schemaorg"
-  sns_publish_topics     = ["phoenix-sns-node-published"]
-  write_buckets          = ["phoenix-structured-content", "phoenix-raw-content"]
-  read_buckets           = ["phoenix-raw-content", "phoenix-structured-content"]
-  dynamodb_tables        = [module.dynamodb_tables["phoenix-node-names"].dynamodb_table_arn, module.dynamodb_tables["phoenix-page-titles"].dynamodb_table_arn]
+  sns_subscription_topic = module.sns_topics["sns-raw-content-schemaorg"].sns_topic_arn
+  sns_publish_topics     = [module.sns_topics["sns-node-published"].sns_topic_arn]
+  write_buckets          = [module.s3_buckets["structured-content"].s3_bucket_id, module.s3_buckets["raw-content"].s3_bucket_id]
+  read_buckets           = [module.s3_buckets["raw-content"].s3_bucket_id, module.s3_buckets["structured-content"].s3_bucket_id]
+  dynamodb_tables        = [module.dynamodb_tables["node-names"].dynamodb_table_arn, module.dynamodb_tables["page-titles"].dynamodb_table_arn]
+  common_tags = local.common_tags
 }
