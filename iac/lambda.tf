@@ -8,7 +8,7 @@ module "lambda_fetch-changed" {
   write_buckets          = [module.s3_buckets["raw-content"].s3_bucket_id]
   read_buckets           = []
   dynamodb_tables        = []
-  common_tags = local.common_tags
+  common_tags            = local.common_tags
 }
 
 module "lambda_fetch-schemaorg" {
@@ -21,7 +21,7 @@ module "lambda_fetch-schemaorg" {
   write_buckets          = [module.s3_buckets["raw-content"].s3_bucket_id]
   read_buckets           = [module.s3_buckets["raw-content"].s3_bucket_id]
   dynamodb_tables        = []
-  common_tags = local.common_tags
+  common_tags            = local.common_tags
 }
 
 module "lambda_merge_schemaorg" {
@@ -34,7 +34,7 @@ module "lambda_merge_schemaorg" {
   write_buckets          = [module.s3_buckets["raw-content"].s3_bucket_id]
   read_buckets           = [module.s3_buckets["raw-content"].s3_bucket_id]
   dynamodb_tables        = []
-  common_tags = local.common_tags
+  common_tags            = local.common_tags
 }
 
 module "lambda_parsoid" {
@@ -47,5 +47,5 @@ module "lambda_parsoid" {
   write_buckets          = [module.s3_buckets["structured-content"].s3_bucket_id, module.s3_buckets["raw-content"].s3_bucket_id]
   read_buckets           = [module.s3_buckets["raw-content"].s3_bucket_id, module.s3_buckets["structured-content"].s3_bucket_id]
   dynamodb_tables        = [module.dynamodb_tables["node-names"].dynamodb_table_arn, module.dynamodb_tables["page-titles"].dynamodb_table_arn]
-  common_tags = local.common_tags
+  common_tags            = local.common_tags
 }

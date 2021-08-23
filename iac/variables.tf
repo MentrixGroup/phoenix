@@ -21,11 +21,11 @@ variable "s3_buckets" {
   type = map(any)
   default = {
     raw-content = {
-      acl = "private",
+      acl        = "private",
       versioning = false
     },
     structured-content = {
-      acl = "private",
+      acl        = "private",
       versioning = false
     }
   }
@@ -58,7 +58,7 @@ variable "env_tag" {
 }
 
 variable "project" {
-  type = string
+  type    = string
   default = "phoenix"
 }
 
@@ -66,7 +66,7 @@ locals {
   # Common tags to be assigned to all resources
   common_tags = {
     Project     = var.project
-    ManagedBy     = "Terraform"
+    ManagedBy   = "Terraform"
     Environment = var.env_tag
   }
 
