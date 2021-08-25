@@ -1,4 +1,4 @@
-name: 'Terraform'
+name: 'Continuous Integration'
 
 on:
   push:
@@ -21,7 +21,14 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v2
+    
+    # Make sure go is installed
+    - uses: actions/setup-go@v2
+    - run: go version
 
+    - name: Run Build
+      run: make build
+      
     # Setup AWS Creds
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
