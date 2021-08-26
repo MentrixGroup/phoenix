@@ -1,4 +1,10 @@
-
+# If the first argument is "terraform"...
+ifeq (terraform,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "terraform"
+  TF_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(TF_ARGS):;@:)
+endif
 
 build: 
 	$(MAKE) -C storage build
@@ -30,4 +36,8 @@ test:
 	$(MAKE) -C lambdas/merge-schema.org  test
 	$(MAKE) -C lambdas/transform-parsoid test
 
-.PHONY: build clean deploy test
+terraform:
+	@terraform -chdir=iac $(TF_ARGS)
+	
+
+.PHONY: build clean deploy test terraform
