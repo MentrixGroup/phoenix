@@ -7,9 +7,9 @@ terraform {
   }
 
   backend "remote" {
-    organization = "mentrix"
+    organization = var.organization
     workspaces {
-      name = "phoenix"
+      name = var.project
     }
   }
 

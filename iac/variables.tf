@@ -59,7 +59,12 @@ variable "env_tag" {
 
 variable "project" {
   type    = string
-  default = "phoenix"
+  default = ""
+}
+
+variable "organization" {
+  type    = string
+  default = ""
 }
 
 locals {
