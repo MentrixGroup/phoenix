@@ -30,5 +30,5 @@ variable "sns_publish_topics" {
 
 variable "dynamodb_tables" {
   description = "Dynamodb tables a lambda has access to"
-  type = list(string)
+  type = map(any)
 }
