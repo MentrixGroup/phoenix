@@ -59,7 +59,7 @@ jobs:
 
     - name: "Terraform show"
       id: show
-      run: terraform show -json plan.tfplan
+      run: terraform -chdir=iac show -json plan.tfplan
       
     - name: "Save Plan JSON"
       run: echo '${{ steps.show.outputs.stdout }}' > plan.json
