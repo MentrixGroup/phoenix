@@ -103,21 +103,21 @@ resource "aws_iam_role_policy_attachment" "s3_read" {
 // DynamoDB table access
 
 data "template_file" "dynamodb_table_policy_template" {
- for_each = var.dynamodb_tables
+ count = length(var.dynamodb_tables)
  template = "${file("./shared/iam/dynamodb_table_policy.tpl")}"
  vars = {
-   resource = each.value.arn
+   resource = var.dynamodb_tables[count.index].arn
  }
 }
 
 resource "aws_iam_policy" "dynamodb_table_policy" {
- for_each = var.dynamodb_tables
- name = "lambda_${var.function_name}_${each.key}_dynamodb_table_policy"
- policy = "${data.template_file.dynamodb_table_policy_template[each.key].rendered}"
+ count = length(var.dynamodb_tables)
+ name = "lambda_${var.function_name}_${var.dynamodb_tables[count.index].name}_dynamodb_table_policy"
+ policy = "${data.template_file.dynamodb_table_policy_template[count.index].rendered}"
 }
 
 resource "aws_iam_role_policy_attachment" "dynamodb_table" {
- for_each = var.dynamodb_tables
+ count = length(var.dynamodb_tables)
  role  = aws_iam_role.lambda_exec.name
- policy_arn = each.value.arn
+ policy_arn = "${aws_iam_policy.dynamodb_table_policy[count.index].arn}"
 }

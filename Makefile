@@ -39,5 +39,7 @@ test:
 terraform:
 	@terraform -chdir=iac $(TF_ARGS)
 	
+tflint:
+	tflint -c ./iac/.tflint.hcl ./iac
 
-.PHONY: build clean deploy test terraform
+.PHONY: build clean deploy test terraform tflint

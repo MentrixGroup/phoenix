@@ -1,7 +1,6 @@
-
-PHX_ACCOUNT_ID               = 103068880748
+PHX_ACCOUNT_ID               = 717973338693
 PHX_DEFAULT_REGION           = us-east-1
-PHX_PREFIX                   = wmfbooks
+PHX_PREFIX                   = mentrix_phoenix
 
 ######
 # SNS resources
@@ -9,23 +8,23 @@ PHX_PREFIX                   = wmfbooks
 
 # Topic that receives change events originating from the Wikimedia
 # Event Streams service.
-PHX_SNS_EVENT_STREAMS_BRIDGE      = $(PHX_PREFIX)-event-streams-bridge
+PHX_SNS_EVENT_STREAMS_BRIDGE      = $(PHX_PREFIX)_sns_event_streams_bridge
 
 # Topic that receives events when new HTML is added to incoming (see
 # PHX_S3_RAW_CONTENT_INCOMING).
-PHX_SNS_RAW_CONTENT_INCOMING      = $(PHX_PREFIX)-sns-raw-content-incoming
+PHX_SNS_RAW_CONTENT_INCOMING      = $(PHX_PREFIX)_sns_raw_content_incoming
 
 # Topic that receives events when new linked-data (Wikidata) is added
 # to the raw content store (see PHX_S3_RAW_CONTENT_WD_LINKED)
-PHX_SNS_RAW_CONTENT_WD_LINKED     = $(PHX_PREFIX)-sns-raw-content-schemaorg
+PHX_SNS_RAW_CONTENT_WD_LINKED     = $(PHX_PREFIX)_sns_raw_content_schemaorg
 
 # Topic that receives events when new Node objects are added to the
 # Structured Content Store
-PHX_SNS_NODE_PUBLISHED            = $(PHX_PREFIX)-sns-node-published
+PHX_SNS_NODE_PUBLISHED            = $(PHX_PREFIX)_sns_node_published
 
 # Topic that receives events when new Book objects are found in citations
 # Structured Content Store
-PHX_SNS_SOURCE_PARSE_PUBLISHED            = $(PHX_PREFIX)-sns-source-parse-published
+PHX_SNS_SOURCE_PARSE_PUBLISHED            = $(PHX_PREFIX)_sns_source_parse_published
 
 
 ######
@@ -34,7 +33,7 @@ PHX_SNS_SOURCE_PARSE_PUBLISHED            = $(PHX_PREFIX)-sns-source-parse-publi
 
 # The "raw content" bucket; Corresponds with uses of "raw content
 # store" in the architecture documents.
-PHX_S3_RAW_CONTENT_BUCKET        = $(PHX_PREFIX)-raw-content
+PHX_S3_RAW_CONTENT_BUCKET        = $(PHX_PREFIX)_raw_content
 
 # Folder where HTML documents of a corresponding revision are
 # downloaded to after a change event is received.
@@ -48,7 +47,7 @@ PHX_S3_RAW_CONTENT_LINKED_HTML   = linked-html
 
 # The "structured content" bucket, where parsed and transformed data are
 # stored in canonical format
-PHX_S3_STRUCTURED_CONTENT_BUCKET = $(PHX_PREFIX)-structured-content
+PHX_S3_STRUCTURED_CONTENT_BUCKET = $(PHX_PREFIX)_structured_content
 
 
 ######
@@ -58,25 +57,25 @@ PHX_S3_STRUCTURED_CONTENT_BUCKET = $(PHX_PREFIX)-structured-content
 # Lambda function subscribed to Wikimedia Event Stream change events.
 # Downloads the corresponding HTML (revision) and writes it to S3 (see
 # PHX_S3_RAW_CONTENT_INCOMING)
-PHX_LAMBDA_FETCH_CHANGED   = $(PHX_PREFIX)-fetch-changed
+PHX_LAMBDA_FETCH_CHANGED   = $(PHX_PREFIX)_lambda_fetch_changed
 
 # Function invoked when new content has been added to incoming
 # (PHX_SNS_RAW_CONTENT_INCOMING).  Downloads corresponding Wikidata
 # information, constructs linked data (JSON-LD) in the schema.org
 # vocabulary, and uploads to S3 (PHX_S3_RAW_CONTENT_WD_LINKED)
-PHX_LAMBDA_FETCH_SCHEMAORG = $(PHX_PREFIX)-lambda-fetch-schemaorg
+PHX_LAMBDA_FETCH_SCHEMAORG = $(PHX_PREFIX)_lambda_fetch_schemaorg
 
 # Lambda subscribed to events that signal the creation of new Wikidata
 # linked data (PHX_SNS_RAW_CONTENT_WD_LINKED).  Transforms the HTML
 # from incoming (PHX_S3_RAW_CONTENT_INCOMING) to include the linked
 # data (as JSON-LD), and uploads the result
 # (PHX_S3_RAW_CONTENT_LINKED_HTML)
-PHX_LAMBDA_MERGE_SCHEMAORG = $(PHX_PREFIX)-lambda-merge-schemaorg
+PHX_LAMBDA_MERGE_SCHEMAORG = $(PHX_PREFIX)_lambda_merge_schemaorg
 
 # Lambda subscribed to events that signal the saving raw content to S3 
 # storage, transforms raw content into canonical tructure and save to S3 
 # storage (See PHX_S3_STRUCTURED_CONTENT_BUCKET)
-PHX_LAMBDA_TRANSFORM_PARSOID = $(PHX_PREFIX)-lambda-transform-parsoid
+PHX_LAMBDA_TRANSFORM_PARSOID = $(PHX_PREFIX)_lambda_transform_parsoid
 
 # Lambda subscribed to events that signal that book source was found for
 # a citation, gets book content into canonical tructure and save to S3 
@@ -93,10 +92,10 @@ PHX_LAMBDA_RELATED_TOPICS = $(PHX_PREFIX)-lambda-related-topics
 ######
 
 # Table used to index page titles
-PHX_DYNAMODB_PAGE_TITLES = $(PHX_PREFIX)-page-titles
+PHX_DYNAMODB_PAGE_TITLES = $(PHX_PREFIX)_page_titles
 
 # Table used to index node names
-PHX_DYNAMODB_NODE_NAMES  = $(PHX_PREFIX)-node-names
+PHX_DYNAMODB_NODE_NAMES  = $(PHX_PREFIX)_node_names
 
 
 ######
@@ -118,7 +117,3 @@ PHX_SEARCH_ENDPOINT   = https://vpc-wmfbooks-es-e5tneoamgaiqiz67nbufjhrpla.us-ea
 
 # Elasticsearch index name for related topics indexing
 PHX_SEARCH_IDX_TOPICS = topics
-
-
-# For internal use in ARN string formatting
-_BASE_ARN = $(shell printf "arn:aws:%%s:%s:%s:%%s" "$(PHX_DEFAULT_REGION)" "$(PHX_ACCOUNT_ID)")
