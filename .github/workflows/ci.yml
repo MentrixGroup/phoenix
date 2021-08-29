@@ -71,13 +71,14 @@ jobs:
         retention-days: 1
 
     - name: Run infracost diff
-      uses: infracost/infracost-gh-action@master
+      uses: infracost/infracost-gh-action@master # Use a specific version instead of master if locking is preferred
       env:
         INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Do not change
+        # See the cloud credentials section for the options
       with:
-        path: plan.json
-        continue-on-error: true
+        path: iac
+        terraform_plan_flags: -var-file=iac/terraform.auto.tfvars
         
 
       # On push to master, build or change infrastructure according to Terraform configuration files
