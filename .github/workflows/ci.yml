@@ -59,7 +59,10 @@ jobs:
 
     - name: "Terraform show"
       id: show
-      run: terraform -chdir=iac show -json plan.tfplan > plan.json
+      run: terraform -chdir=iac show -json plan.tfplan
+
+    - name: "Save Plan JSON"
+      run: echo '${{ steps.show.outputs.stdout }}' > plan.json # Do not change
       
     - uses: actions/upload-artifact@v2
       with:
