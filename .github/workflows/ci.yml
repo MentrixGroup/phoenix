@@ -68,14 +68,17 @@ jobs:
       with:
         name: plan.json
         path: ./plan.json
+        retention-days: 1
 
     - name: Run infracost diff
-      uses: infracost/infracost-gh-action@v0.7.0
+      uses: infracost/infracost-gh-action@master
       env:
         INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        path: ./plan.json
+        path: plan.json
+        continue-on-error: true
+        
 
       # On push to master, build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
