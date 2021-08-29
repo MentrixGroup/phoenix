@@ -20,11 +20,11 @@ variable "dynamodb_tables" {
 variable "s3_buckets" {
   type = map(any)
   default = {
-    raw_content = {
+    raw-content = {
       acl        = "private",
       versioning = false
     },
-    structured_content = {
+    structured-content = {
       acl        = "private",
       versioning = false
     }

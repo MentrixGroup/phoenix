@@ -1,6 +1,6 @@
 PHX_ACCOUNT_ID               = 717973338693
 PHX_DEFAULT_REGION           = us-east-1
-PHX_PREFIX                   = mentrix_phoenix
+PHX_PREFIX                   = mntrxphnx
 
 ######
 # SNS resources
@@ -33,7 +33,7 @@ PHX_SNS_SOURCE_PARSE_PUBLISHED            = $(PHX_PREFIX)_sns_source_parse_publi
 
 # The "raw content" bucket; Corresponds with uses of "raw content
 # store" in the architecture documents.
-PHX_S3_RAW_CONTENT_BUCKET        = $(PHX_PREFIX)_raw_content
+PHX_S3_RAW_CONTENT_BUCKET        = $(PHX_PREFIX)-raw-content
 
 # Folder where HTML documents of a corresponding revision are
 # downloaded to after a change event is received.
@@ -47,7 +47,7 @@ PHX_S3_RAW_CONTENT_LINKED_HTML   = linked-html
 
 # The "structured content" bucket, where parsed and transformed data are
 # stored in canonical format
-PHX_S3_STRUCTURED_CONTENT_BUCKET = $(PHX_PREFIX)_structured_content
+PHX_S3_STRUCTURED_CONTENT_BUCKET = $(PHX_PREFIX)-structured-content
 
 
 ######
