@@ -21,12 +21,14 @@ variable "s3_buckets" {
   type = map(any)
   default = {
     raw-content = {
-      acl        = "private",
-      versioning = false
+      acl          = "private",
+      block_public = true,
+      versioning   = false
     },
     structured-content = {
-      acl        = "private",
-      versioning = false
+      acl          = "private",
+      block_public = true,
+      versioning   = false
     }
   }
 }
