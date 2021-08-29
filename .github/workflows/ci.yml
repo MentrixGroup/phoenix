@@ -59,18 +59,27 @@ jobs:
 
     - name: "Terraform show"
       id: show
-      run: terraform -chdir=iac show -json plan.tfplan > plan.json
-      
+      run: terraform -chdir=iac show -json plan.tfplan
+
     - name: "Save Plan JSON"
-      run: ls -al; ls -al ./iac
+      run: echo '${{ steps.show.outputs.stdout }}' > plan.json # Do not change
+      
+    - uses: actions/upload-artifact@v2
+      with:
+        name: plan.json
+        path: ./plan.json
+        retention-days: 1
 
     - name: Run infracost diff
-      uses: infracost/infracost-gh-action@v0.7.0
+      uses: infracost/infracost-gh-action@master # Use a specific version instead of master if locking is preferred
       env:
         INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Do not change
+        # See the cloud credentials section for the options
       with:
-        path: plan.json
+        path: iac
+        terraform_plan_flags: -var-file=iac/terraform.auto.tfvars
+        
 
       # On push to master, build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
