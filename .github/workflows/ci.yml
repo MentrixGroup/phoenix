@@ -25,10 +25,17 @@ jobs:
     # Make sure go is installed
     - uses: actions/setup-go@v2
     - run: go version
+
+    - uses: actions/cache@v2
+      id: cache
+      with:
+        path: '**/function.zip.'
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
     
     # Terraform expects the zip files to be created for each Lambda function
     # so we make sure the build happens first.
     - name: Run Build
+      if: steps.cache.outputs.cache-hit != 'true'
       run: make build
 
     # Setup AWS Creds
@@ -61,8 +68,10 @@ jobs:
       id: show
       run: terraform -chdir=iac show -json plan.tfplan > plan.json
       
-    - name: "Save Plan JSON"
-      run: ls -al; ls -al ./iac
+    - uses: actions/upload-artifact@v2
+      with:
+        name: plan.json
+        path: ./plan.json
 
     - name: Run infracost diff
       uses: infracost/infracost-gh-action@v0.7.0
@@ -70,7 +79,7 @@ jobs:
         INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        path: plan.json
+        path: ./plan.json
 
       # On push to master, build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
