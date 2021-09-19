@@ -5,14 +5,25 @@ variable "dynamodb_tables" {
   type = map(any)
   default = {
     node_names = {
-      hash_key       = "Title",
-      attribute_name = "Title",
-      attribute_type = "S"
+      hash_key       = "Title"
+      range_key      = "Authority"
+      hk_attribute_name = "Title"
+      hk_attribute_type = "S"
+      rk_attribute_name = "Authority"
+      rk_attribute_type = "S"
+      billing_mode   = "PROVISIONED"
+      read_capacity  = 2
+      write_capacity = 2
     },
     page_titles = {
-      hash_key       = "Name",
-      attribute_name = "Name",
-      attribute_type = "S"
+      hash_key       = "Name"
+      hk_attribute_name = "Name"
+      hk_attribute_type = "S"
+      rk_attribute_name = "Authority"
+      rk_attribute_type = "S"
+      billing_mode   = "PROVISIONED"
+      read_capacity  = 2
+      write_capacity = 2
     }
   }
 }
@@ -21,12 +32,14 @@ variable "s3_buckets" {
   type = map(any)
   default = {
     raw-content = {
-      acl        = "private",
-      versioning = false
+      acl          = "private",
+      block_public = true,
+      versioning   = false
     },
     structured-content = {
-      acl        = "private",
-      versioning = false
+      acl          = "private",
+      block_public = true,
+      versioning   = false
     }
   }
 }
